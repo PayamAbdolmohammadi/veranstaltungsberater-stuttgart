@@ -195,6 +195,15 @@ a.tag-office:hover { text-decoration: underline; }
 .restart-btn { display: inline-flex; align-items: center; gap: 7px; margin-top: 24px; padding: 11px 22px; background: transparent; border: 1.5px solid var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); cursor: pointer; transition: all .2s; }
 .restart-btn:hover { background: var(--ink); color: var(--paper); }
 
+.pdf-paket-box { border: 2px solid var(--green); background: var(--green-pale); padding: 24px 26px; margin-top: 24px; }
+.pdf-paket-box .pp-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--green); margin-bottom: 10px; }
+.pdf-paket-box h3 { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 8px; }
+.pdf-paket-box p { font-size: 13px; color: #1e3d28; font-weight: 300; line-height: 1.65; margin-bottom: 18px; }
+.pp-btns { display: flex; flex-direction: column; gap: 8px; }
+.pp-btn-main { padding: 13px 24px; background: var(--green); color: white; border: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .2s; align-self: flex-start; }
+.pp-btn-main:hover { background: #1e4a30; }
+.pp-sub { font-size: 11.5px; color: var(--muted); font-weight: 300; font-style: italic; }
+
 @media (max-width: 480px) {
   .opts.two, .field-row { grid-template-columns: 1fr; }
   .download-grid { grid-template-columns: 1fr; }
@@ -374,6 +383,18 @@ a.tag-office:hover { text-decoration: underline; }
     <div class="noch-fehlt-box" id="nochFehltBox"></div>
     <div class="tl-box" id="tlBox"></div>
     <div id="ctWrap"></div>
+
+    <!-- PDF Paket -->
+    <div class="pdf-paket-box" id="pdfPaketBox" style="display:none;">
+      <div class="pp-label">Vollständiges Paket</div>
+      <h3>Alles auf einen Blick — als PDF</h3>
+      <p>Checkliste, Zeitplan, fehlende Nachweise und ausgefüllte Formulare — zusammengefasst für Ihre Unterlagen und für die Einreichung beim Amt.</p>
+      <div class="pp-btns">
+        <button class="pp-btn-main" onclick="downloadPaket()">⬇ Vollständiges Paket herunterladen</button>
+        <div class="pp-sub">Enthält: Checkliste · Zeitplan · Fehlende Nachweise · Wichtiger Hinweis</div>
+      </div>
+    </div>
+
     <button class="restart-btn" onclick="restart()">↩ Neue Veranstaltung planen</button>
   </div>
 </div>
@@ -617,8 +638,8 @@ function buildChecklist() {
     w:'Wenn bei Ihrer Veranstaltung jemand zu Schaden kommt, haften Sie als Veranstalter. Die Versicherungssumme wird individuell von der Versicherung je nach erwarteter Personenzahl festgelegt.',
     dl:'Spätestens 2 Wochen vorher',of:'Bürgerservice Veranstaltungen',warn:true});
 
-  ri(cl,{t:'Alleinverantwortliche(n) Veranstaltungsleiter/-in benennen',
-    w:'Diese Person ist während der gesamten Veranstaltung die einzige Ansprechperson für Polizei und Feuerwehr — und muss eine Stellvertretung haben.',
+  ri(cl,{t:'Verantwortliche Veranstaltungsleitung benennen',
+    w:'Ansprechperson für Behörden und Einsatzkräfte; zusätzlich sollte eine Stellvertretung benannt werden.',
     dl:'Im Antrag angeben',of:'Im Antrag angeben'});
 
   if(veryBig) ri(cl,{t:'Sicherheitskonzept (schriftlich)',
@@ -632,7 +653,7 @@ function buildChecklist() {
   if(food) {
     sec(cl,'Gastronomie');
     ri(cl,{t:'Anzeige nach §2 LGastG BW — pro Standbetreiber',
-      w:'Das alte §12 GastG gilt nicht mehr. Nach dem neuen Landesgaststättengesetz BW ist für jeden Stand eine separate Anzeige erforderlich. Bitte beim Amt für öffentliche Ordnung klären, ob eine Bestätigung erteilt wird.',
+      w:'Das alte §12 GastG gilt nicht mehr. Nach dem neuen Landesgaststättengesetz BW ist für jeden Stand eine separate Anzeige erforderlich. Bitte beim Amt für öffentliche Ordnung klären, welche Anforderungen für die Anzeige gelten.',
       dl:'Mind. 2 Wochen vorher',of:'Gewerbe- und Gaststättenrecht, Schloßstr. 73',isNew:true,fm:'Separates Online-Verfahren'});
 
     if(alkohol) ri(cl,{t:'Gaststättenrechtliche Gestattung für Alkoholausschank (klären)',
@@ -667,10 +688,10 @@ function buildChecklist() {
   if(traffic) {
     sec(cl,'Verkehrsmaßnahmen');
     ri(cl,{t:'MVAS-Schulungsnachweis (verantwortliche Person)',
-      w:'Neu 2026: MVAS steht für „Merkblatt über Rahmenbedingungen für erforderliche Fachkenntnisse zur Verkehrsabsicherung von Arbeitsstellen an Straßen". Die verantwortliche Person muss einen Schulungsnachweis vorlegen.',
+      w:'MVAS steht für „Merkblatt über Rahmenbedingungen für erforderliche Fachkenntnisse zur Verkehrsabsicherung von Arbeitsstellen an Straßen". Die verantwortliche Person muss einen Schulungsnachweis vorlegen.',
       dl:`ca. ${weeks} Wochen vorher`,of:'Tiefbauamt',isNew:true});
     ri(cl,{t:'Verkehrsrechtliche Anordnung (§§45, 46 StVO)',
-      w:'Jede Sperrung und jedes Halteverbot muss amtlich angeordnet werden. Die Umsetzung übernehmen Sie oder eine Fachfirma. Fachfirma spart 15% Verwaltungsgebühr.',
+      w:'Jede Sperrung und jedes Halteverbot muss amtlich angeordnet werden. Die Umsetzung kann durch eine Fachfirma erfolgen; Details mit dem Tiefbauamt klären.',
       dl:`ca. ${weeks} Wochen vorher`,of:'Tiefbauamt'});
   }
 
@@ -679,7 +700,7 @@ function buildChecklist() {
     'Versicherungsnachweis',
     hasBuilds ? 'Prüfbuch' : null,
     traffic ? 'MVAS-Nachweis' : null,
-    'Sanitätsdienst-Bestätigung',
+    'Nachweis / Bestätigung Sanitätsdienst, falls erforderlich',
     veryBig ? 'Sicherheitskonzept' : null,
     food ? 'Anzeige LGastG (pro Stand)' : null,
     alkohol ? 'Gaststättenrechtliche Gestattung prüfen' : null,
@@ -696,12 +717,12 @@ function buildChecklist() {
     {w:'−2 Wochen', t:`Haftpflichtversicherung einreichen${food?' · Gastronomie-Anträge abschicken':''}`},
     {w:'Bis zur Veranstaltung', t:'Rettungswege markieren und freihalten'},
     {w:'Veranstaltungstag', t:'Begehung mit Polizei, Feuerwehr und Sanitätsdienst'},
-    {w:'Veranstaltung', t:'Nachtruhe ab 22:00 · Sonntags kein Aufbau 9–11 Uhr'},
+    {w:'', t:'Während der Veranstaltung: Nachtruhe ab 22:00 Uhr · Sonntags kein Aufbau 9–11 Uhr'},
   ];
   tl.innerHTML = '<h3>Ihr Zeitplan</h3>' + tlRows.map(r=>`<div class="tl-row"><div class="tl-when">${r.w}</div><div class="tl-what">${r.t}</div></div>`).join('');
 
   // Contacts — GEÄNDERT: "Amt für öffentliche Ordnung" hinzugefügt
-  const contacts = [{n:'Amt für öffentliche Ordnung — Bürgerservice Veranstaltungen',d:'Tel. 0711 216-91131\nveranstaltungsmanagement@stuttgart.de\nEberhardstr. 35, 70173 Stuttgart\nMo/Mi/Do/Fr 9–12 Uhr, Do auch 14–15:30'}];
+  const contacts = [{n:'Amt für öffentliche Ordnung — Bürgerservice Veranstaltungen',d:'Tel. 0711 216-91131\nveranstaltungen@stuttgart.de\nEberhardstr. 35, 70173 Stuttgart\nMo/Mi/Do/Fr 9–12 Uhr, Do auch 14–15:30'}];
   if(food) contacts.push({n:'Amt für öffentliche Ordnung — Gewerbe- und Gaststättenrecht',d:'Tel. 0711 216-98905\ngaststaettenrecht@stuttgart.de\nSchloßstr. 73, 70176 Stuttgart\nMo/Mi/Fr 8:30–12:30, Do 13–18'});
   if(hasBuilds) contacts.push({n:'Baurechtsamt',d:'Tel. 0711 216-60100\nBSBauen@stuttgart.de\nEberhardstr. 33, 70173 Stuttgart'});
   document.getElementById('ctWrap').innerHTML =
@@ -712,6 +733,11 @@ function buildChecklist() {
   for(let i=1;i<=5;i++) document.getElementById('pl'+i).className='p-line done';
   document.getElementById('pLabel').textContent = 'Fertig ✓';
   document.getElementById('phaseTab1').classList.add('done');
+
+  // Store checklist data for PDF paket
+  window._paketData = { ort, besucher, erstmal, food, alkohol, aufbau, traffic, weeks, hasBuilds, hasMusik, bigEvent, veryBig, ortLabel, bLabel, nochFehlt };
+  document.getElementById('pdfPaketBox').style.display = 'block';
+
   goQ('resultWrap');
 }
 
@@ -859,6 +885,145 @@ async function makeFallback(data,title) {
 }
 
 function dl(blob,name){ const u=URL.createObjectURL(blob),a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+
+function dl(blob,name){ const u=URL.createObjectURL(blob),a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+
+// ═══════════════════════════════════════
+// PDF PAKET
+// ═══════════════════════════════════════
+async function downloadPaket() {
+  const btn = document.querySelector('.pp-btn-main');
+  btn.textContent = '⏳ Wird erstellt…'; btn.disabled = true;
+  try {
+    const {PDFDocument,StandardFonts,rgb} = PDFLib;
+    const doc = await PDFDocument.create();
+    const fontR = await doc.embedFont(StandardFonts.Helvetica);
+    const fontB = await doc.embedFont(StandardFonts.HelveticaBold);
+    const d = window._paketData || {};
+    const weeks=d.weeks||12, ortLabel=d.ortLabel||'', erstmal=d.erstmal;
+    const food=d.food, alkohol=d.alkohol, hasBuilds=d.hasBuilds;
+    const hasMusik=d.hasMusik, traffic=d.traffic;
+    const bigEvent=d.bigEvent, veryBig=d.veryBig, nochFehlt=d.nochFehlt||[];
+    const W2=595,H=842,ML=52,MR=543,MT=780;
+    const ink=rgb(.11,.09,.06), amber=rgb(.78,.49,.05), green2=rgb(.16,.37,.25);
+    const muted=rgb(.54,.49,.41), red2=rgb(.69,.19,.12);
+    let page=doc.addPage([W2,H]); let y=MT;
+
+    const footer=()=>{ page.drawText('Veranstaltungsberater Stuttgart — Stand Juni 2026 · Diese Liste ersetzt keine Genehmigung.',{x:ML,y:18,size:7.5,font:fontR,color:muted}); };
+    const chkPg=(n=40)=>{ if(y<n+50){ page=doc.addPage([W2,H]); y=MT; footer(); } };
+    const gap=(px=8)=>{ y-=px; };
+    const txt=(t,x2,y2,sz,f,c)=>page.drawText(t,{x:x2,y:y2,size:sz,font:f,color:c});
+
+    // wrap text to max width
+    const wrapTxt=(t,maxW,sz,f)=>{
+      const words=t.split(' '); const lines=[]; let cur='';
+      const charW=sz*0.52;
+      for(const w of words){
+        if((cur+' '+w).length*charW>maxW&&cur){ lines.push(cur.trim()); cur=w; }
+        else cur+=(cur?' ':'')+w;
+      } if(cur) lines.push(cur.trim()); return lines;
+    };
+
+    const drawLines=(lines,x2,sz,f,c,leading=13)=>{ for(const l of lines){ chkPg(sz+4); txt(l,x2,y,sz,f,c); y-=leading; } };
+
+    const secHead=(t)=>{ chkPg(28); gap(6); page.drawRectangle({x:ML,y:y-3,width:MR-ML,height:17,color:rgb(.91,.88,.82)}); txt(t.toUpperCase(),ML+6,y+2,8.5,fontB,muted); y-=22; };
+
+    const chkItem=(title,why,dl2,office,warn=false)=>{
+      chkPg(55);
+      page.drawRectangle({x:ML,y:y-1,width:10,height:10,borderColor:muted,borderWidth:1});
+      txt(title,ML+16,y+1,10.5,fontB,ink); y-=16;
+      if(why){ const ls=wrapTxt(why,MR-ML-20,9,fontR); drawLines(ls,ML+16,9,fontR,muted); }
+      if(dl2||office){
+        const tc=warn?red2:amber;
+        if(dl2){ page.drawRectangle({x:ML+16,y:y-2,width:dl2.length*5+12,height:13,borderColor:tc,borderWidth:.7}); txt(dl2,ML+20,y,8,fontR,tc); }
+        if(office){ const ox=ML+16+(dl2?dl2.length*5+16:0); page.drawRectangle({x:ox,y:y-2,width:office.length*4.8+10,height:13,borderColor:muted,borderWidth:.7}); txt(office,ox+4,y,8,fontR,muted); }
+        y-=18;
+      } y-=4;
+    };
+
+    // Cover
+    page.drawRectangle({x:0,y:H-96,width:W2,height:96,color:ink});
+    txt('STUTTGART — STAND JUNI 2026',ML,H-28,9,fontB,amber);
+    txt('Ihre persönliche Veranstaltungsmappe',ML,H-48,17,fontB,rgb(.96,.94,.90));
+    txt((erstmal?'Erstveranstaltung':'Wiederkehrende Veranstaltung')+' — '+ortLabel,ML,H-66,10.5,fontR,rgb(.7,.66,.58));
+    txt('Antragsfrist: ca. '+weeks+' Wochen',ML,H-82,9.5,fontR,rgb(.85,.78,.62));
+    footer(); y=MT-16;
+
+    // Hinweis
+    page.drawRectangle({x:ML,y:y-32,width:MR-ML,height:44,color:rgb(.99,.95,.88),borderColor:amber,borderWidth:1});
+    txt('WICHTIGER HINWEIS',ML+8,y+5,8,fontB,amber);
+    txt('Diese Liste ersetzt keine Genehmigung. Sie zeigt, welche Unterlagen voraussichtlich erforderlich sind.',ML+8,y-7,8.5,fontR,rgb(.35,.25,.12));
+    txt('Ausgefüllte Formulare müssen unterschrieben und mit den erforderlichen Nachweisen eingereicht werden.',ML+8,y-19,8.5,fontR,rgb(.35,.25,.12));
+    y-=52; gap(6);
+
+    // Pflichtunterlagen
+    secHead('Pflichtunterlagen — jede öffentliche Veranstaltung');
+    chkItem('Antrag auf Überlassung öffentlicher Verkehrsfläche','Hauptantrag §29 StVO. Koordiniert alle beteiligten Stellen — Polizei, Feuerwehr, Tiefbauamt.',`ca. ${weeks} Wochen vorher`,'Bürgerservice Veranstaltungen');
+    chkItem('Veranstaltererklärung §29 StVO','Bestätigung der Kostenübernahme für verkehrsrechtliche Maßnahmen.',`ca. ${weeks} Wochen vorher`,'Bürgerservice Veranstaltungen');
+    chkItem('Belegungsplan 1:500 (max. DIN A3)','Rettungswege und Feuergassen von mind. 5 m Breite freihalten. Abstand zu Gebäuden mind. 2 m.',`ca. ${weeks} Wochen vorher`,'Stadtmessungsamt (kostenpflichtig)');
+    chkItem('Veranstaltungshaftpflichtversicherung','Versicherungssumme individuell je nach erwarteter Personenzahl festgelegt.','Spätestens 2 Wochen vorher','Bürgerservice Veranstaltungen',true);
+    chkItem('Verantwortliche Veranstaltungsleitung benennen','Ansprechperson für Behörden und Einsatzkräfte; zusätzlich sollte eine Stellvertretung benannt werden.','Im Antrag angeben','');
+    if(veryBig) chkItem('Sicherheitskonzept (schriftlich)','Ab 1.000 Personen — Versammlungsstättenverordnung BW. Evakuierung, Ordnerdichte, Notfallplan.',`ca. ${weeks} Wochen vorher`,'Bürgerservice Veranstaltungen',true);
+    chkItem(bigEvent?'Verstärkter Sanitätsdienst':'Sanitätsdienst organisieren','Kann bei Veranstaltungen erforderlich sein. Zuständige Behörde entscheidet über Umfang.','Rechtzeitig klären','DRK / DLRG / Malteser / Johanniter');
+
+    if(food){
+      secHead('Gastronomie');
+      chkItem('Anzeige nach §2 LGastG BW — pro Standbetreiber','Neues Landesgaststättengesetz BW. Jeder Stand einzeln. Beim Amt klären, welche Anforderungen gelten.','Mind. 2 Wochen vorher','Gewerbe- und Gaststättenrecht');
+      if(alkohol) chkItem('Gaststättenrechtliche Gestattung (prüfen)','Für Alkoholausschank kann eine Gestattung erforderlich sein. Beim Amt für öffentliche Ordnung klären.','Mind. 2 Wochen vorher','Gewerbe- und Gaststättenrecht',true);
+      chkItem('Hygiene-Auflagen einhalten','Begehung durch Lebensmittelkontrolle möglich. Festes Dach, abwaschbare Böden, Kühlmöglichkeiten.','Ab Aufbau','Lebensmittelüberwachung');
+    }
+    if(hasBuilds){
+      secHead('Fliegende Bauten');
+      chkItem('Prüfbuch / statische Nachweise (je nach Größe)','Je nach Größe und Konstruktion können Prüfbuch oder statische Nachweise erforderlich sein.',`ca. ${weeks} Wochen vorher`,'Baurechtsamt, Eberhardstr. 33');
+      chkItem('Rettungswege freihalten','Rettungswege und Feuergassen von mind. 5 m Breite. Abstand zu Gebäuden 2 m.','Gilt ab Aufbau','Branddirektion');
+    }
+    if(hasMusik){
+      secHead('Musik & Lärm');
+      chkItem('Musikzeiten im Antrag angeben','Sonntags keine Lärmaktionen 9–11 Uhr. Nachtruhe ab 22:00 — in Zelten bis 23:00 mit Genehmigung.','Im Antrag angeben','Bürgerservice Veranstaltungen');
+    }
+    if(traffic){
+      secHead('Verkehrsmaßnahmen');
+      chkItem('MVAS-Schulungsnachweis','Merkblatt über Rahmenbedingungen für Fachkenntnisse zur Verkehrsabsicherung.',`ca. ${weeks} Wochen vorher`,'Tiefbauamt');
+      chkItem('Verkehrsrechtliche Anordnung §§45, 46 StVO','Jede Sperrung amtlich anordnen. Die Umsetzung kann durch eine Fachfirma erfolgen; Details mit dem Tiefbauamt klären.',`ca. ${weeks} Wochen vorher`,'Tiefbauamt');
+    }
+
+    // Noch nicht erstellt
+    if(nochFehlt.length>0){
+      secHead('Noch nicht automatisch erstellt — manuell einzureichen');
+      for(const item of nochFehlt){
+        chkPg(20); page.drawRectangle({x:ML,y:y-1,width:10,height:10,borderColor:muted,borderWidth:1});
+        txt(item,ML+16,y+1,10,fontR,ink); y-=18;
+      } gap(6);
+    }
+
+    // Zeitplan
+    chkPg(120); gap(10);
+    page.drawRectangle({x:ML,y:y-4,width:MR-ML,height:19,color:rgb(.99,.95,.88),borderColor:amber,borderWidth:1});
+    txt('IHR ZEITPLAN',ML+8,y+7,9,fontB,amber); y-=26;
+    const tlR=[
+      [`ca. ${weeks} Wochen vorher`,`Antrag beim Amt einreichen (inkl. Belegungsplan${hasBuilds?', Prüfbuch':''}${traffic?', MVAS':''})`],
+      ['-2 Wochen',`Haftpflichtversicherung einreichen${food?' · Gastronomie-Anträge':''}`],
+      ['Bis zur Veranstaltung','Rettungswege markieren und freihalten'],
+      ['Veranstaltungstag','Begehung mit Polizei, Feuerwehr und Sanitätsdienst'],
+      ['','Während der Veranstaltung: Nachtruhe ab 22:00 Uhr · Sonntags kein Aufbau 9–11 Uhr'],
+    ];
+    for(const [w2,wh] of tlR){ chkPg(18); if(w2){ txt(w2,ML,y,9,fontB,amber); txt(wh,ML+118,y,9,fontR,ink); } else { txt(wh,ML,y,9,fontR,ink); } y-=17; }
+
+    // Kontakte
+    chkPg(80); gap(14);
+    txt('KONTAKTE',ML,y,8,fontB,muted); y-=14;
+    const cts=[['Amt für öffentliche Ordnung — Bürgerservice Veranstaltungen','Tel. 0711 216-91131 · veranstaltungen@stuttgart.de · Eberhardstr. 35, 70173 Stuttgart']];
+    if(food) cts.push(['Gewerbe- und Gaststättenrecht','Tel. 0711 216-98905 · gaststaettenrecht@stuttgart.de · Schloßstr. 73, 70176 Stuttgart']);
+    if(hasBuilds) cts.push(['Baurechtsamt','Tel. 0711 216-60100 · BSBauen@stuttgart.de · Eberhardstr. 33, 70173 Stuttgart']);
+    for(const [cn,cd] of cts){
+      chkPg(34); page.drawRectangle({x:ML,y:y-16,width:MR-ML,height:28,borderColor:rgb(.87,.83,.75),borderWidth:.7});
+      txt(cn,ML+8,y+5,9.5,fontB,ink); txt(cd,ML+8,y-8,8.5,fontR,muted); y-=36;
+    }
+
+    dl(new Blob([await doc.save()],{type:'application/pdf'}),'Veranstaltungsmappe_Stuttgart.pdf');
+  } catch(err){ console.error(err); alert('Fehler: '+err.message); }
+  btn.textContent='⬇ Vollständiges Paket herunterladen'; btn.disabled=false;
+}
 
 function restart() {
   Object.keys(W).forEach(k=>delete W[k]);
