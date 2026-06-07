@@ -88,6 +88,8 @@ body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4
 /* ── Checklist result ── */
 .result-wrap { display: none; animation: fadeUp .35s ease; }
 .result-wrap.active { display: block; }
+.result-disclaimer { border-left: 3px solid var(--amber); background: var(--amber-pale); padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #5a4020; font-weight: 300; line-height: 1.65; }
+.result-disclaimer strong { font-weight: 600; display: block; margin-bottom: 4px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
 
 .mappe { background: var(--ink); color: var(--paper); padding: 26px 28px; }
 .mappe .m-badge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #e8c97a; margin-bottom: 12px; }
@@ -106,6 +108,9 @@ body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4
 .formulare-cta { border: 2px solid var(--amber); background: var(--amber-pale); padding: 22px 24px; margin: 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .formulare-cta .cta-text h3 { font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 5px; }
 .formulare-cta .cta-text p { font-size: 13px; color: #5a4020; font-weight: 300; line-height: 1.55; }
+.formulare-cta .cta-note { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(200,125,14,.25); font-size: 12.5px; font-weight: 400; }
+.hinweis-box { border: 1px solid var(--rule); background: white; padding: 16px 20px; margin-bottom: 20px; font-size: 13px; color: #5a4f3c; font-weight: 300; line-height: 1.65; }
+.hinweis-box strong { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .cta-btn { padding: 12px 24px; background: var(--amber); color: white; border: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .2s; white-space: nowrap; flex-shrink: 0; }
 .cta-btn:hover { background: #a66a0a; }
 
@@ -128,6 +133,13 @@ body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4
 a.tag-office { text-decoration: none; cursor: pointer; }
 a.tag-office:hover { text-decoration: underline; }
 .tag-new { border-color: var(--amber); color: var(--amber); background: var(--amber-pale); }
+.tag-autofill { border-color: var(--amber); color: var(--amber); background: var(--amber-pale); cursor: pointer; font-family: inherit; font-size: inherit; letter-spacing: inherit; }
+.tag-autofill:hover { background: var(--amber); color: white; border-color: var(--amber); }
+.noch-fehlt-box { border: 1.5px solid var(--ink); background: #fdfaf5; padding: 20px 22px; margin: 20px 0; }
+.noch-fehlt-box h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+.noch-item { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: var(--ink); margin-bottom: 8px; font-weight: 300; line-height: 1.5; }
+.noch-item:last-child { margin-bottom: 0; }
+.noch-item::before { content: '□'; font-family: 'IBM Plex Mono', monospace; color: var(--muted); flex-shrink: 0; }
 
 .tl-box { border: 1.5px solid var(--amber); background: var(--amber-pale); padding: 20px 24px; margin-top: 20px; }
 .tl-box h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--amber); margin-bottom: 14px; }
@@ -231,7 +243,7 @@ a.tag-office:hover { text-decoration: underline; }
   <div class="phase-bar">
     <div class="phase-inner">
       <div class="phase-tab active" id="phaseTab1">① Beratung</div>
-      <div class="phase-tab" id="phaseTab2">② Formulare ausfüllen</div>
+      <div class="phase-tab" id="phaseTab2">② Amtliche Formulare erstellen</div>
       <div class="phase-tab" id="phaseTab3">③ Download</div>
     </div>
   </div>
@@ -358,18 +370,33 @@ a.tag-office:hover { text-decoration: underline; }
 
     <!-- Result / Checkliste -->
     <div class="result-wrap" id="resultWrap">
+      <div class="result-disclaimer">
+        <strong>Wichtiger Hinweis</strong>
+        Diese Liste ersetzt keine Genehmigung.<br>
+        Sie zeigt, welche Unterlagen Sie voraussichtlich vorbereiten müssen.
+      </div>
+
       <div class="mappe" id="mappe"></div>
 
       <!-- CTA zu Formularen -->
       <div class="formulare-cta">
         <div class="cta-text">
-          <h3>Formulare automatisch ausfüllen</h3>
-          <p>Wir übernehmen Ihre Angaben direkt.<br><br>Die offiziellen Formulare sind in wenigen Minuten ausgefüllt und bereit zur Einreichung bei der Stadt Stuttgart.<br><br>Fehlende Nachweise oder Unterlagen zeigen wir Ihnen separat an.</p>
+          <h3>Amtliche Formulare erstellen</h3>
+          <p>Die amtlichen Formulare werden automatisch ausgefüllt und sind bereit zur Einreichung bei der Stadt Stuttgart.</p>
+          <p>Fehlende Nachweise und Unterlagen werden separat angezeigt.</p>
+          <p class="cta-note">Die ausgefüllten Formulare müssen noch unterschrieben und mit den fehlenden Nachweisen eingereicht werden. Dies ersetzt keine Genehmigung.</p>
         </div>
-        <button class="cta-btn" onclick="goToFormulare()">Formulare ausfüllen →</button>
+        <button class="cta-btn" onclick="goToFormulare()">Amtliche Formulare erstellen →</button>
+      </div>
+
+      <div class="hinweis-box">
+        <strong>Hinweis</strong><br>
+        Die automatisch ausgefüllten Formulare sind zur Einreichung vorbereitet.
+        Je nach Veranstaltung müssen weitere Nachweise beigefügt werden, z.&nbsp;B. Belegungsplan, Versicherung, Prüfbuch oder MVAS-Nachweis.
       </div>
 
       <div class="cl-body" id="clBody"></div>
+      <div class="noch-fehlt-box" id="nochFehltBox"></div>
       <div class="tl-box" id="tlBox"></div>
       <div id="ctWrap"></div>
       <button class="restart-btn" onclick="restart()">↩ Neue Veranstaltung planen</button>
@@ -675,17 +702,31 @@ function buildChecklist() {
   // Checklist items
   const cl = document.getElementById('clBody'); cl.innerHTML = '';
   sec(cl,'Pflichtunterlagen — jede öffentliche Veranstaltung');
-  ri(cl,{t:'Antrag auf Überlassung öffentlicher Verkehrsfläche',w:'Das ist der Hauptantrag. Er koordiniert alle Stellen — Polizei, Feuerwehr, Tiefbauamt.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',fm:'antrag_source.pdf'});
-  ri(cl,{t:'Veranstaltererklärung §29 StVO',w:'Sie erklären, alle Kosten zu übernehmen — Verkehrszeichen, Reinigung, Schäden.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',fm:'erklaerung_source.pdf'});
+  ri(cl,{t:'Antrag auf Überlassung öffentlicher Verkehrsfläche',w:'Das ist der Hauptantrag. Er koordiniert alle Stellen — Polizei, Feuerwehr, Tiefbauamt.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',fm:'antrag_source.pdf',autoFill:true});
+  ri(cl,{t:'Veranstaltererklärung §29 StVO',w:'Sie erklären, alle Kosten zu übernehmen — Verkehrszeichen, Reinigung, Schäden.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',fm:'erklaerung_source.pdf',autoFill:true});
   ri(cl,{t:'Belegungsplan 1:500 (max. DIN A3)',w:'Die Feuerwehr muss prüfen, ob ihre Fahrzeuge durchkommen. Rettungswege mind. 5 m, Abstand zu Gebäuden mind. 2 m.',dl:`${weeks} Wochen vorher`,of:'Stadtmessungsamt (Plangrundlage kostenpflichtig)'});
   ri(cl,{t:'Veranstaltungshaftpflichtversicherung',w:'Wenn jemand zu Schaden kommt, haften Sie persönlich. Mindest: 250.000 € Personenschäden, 50.000 € Sachschäden.',dl:'Spätestens 2 Wochen vorher',of:'Bürgerservice Veranstaltungen',warn:true});
   ri(cl,{t:'Veranstaltungsleiter/-in benennen',w:'Diese Person ist die einzige Ansprechperson für Polizei und Feuerwehr während der Veranstaltung.',dl:'Im Antrag angeben',of:'Im Antrag angeben'});
   if(veryBig) ri(cl,{t:'Sicherheitskonzept (schriftlich)',w:'Ab 1.000+ Personen ist ein schriftliches Konzept mit Evakuierung, Sanitätsdienst und Ordnerdichte erforderlich.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',warn:true});
   ri(cl,{t:bigEvent?'Verstärkter Sanitätsdienst':'Sanitätsdienst organisieren',w:'Der öffentliche Rettungsdienst (112) reicht nicht aus. Ein eigener Sanitätsdienst muss vor Ort sein.'+(bigEvent?' Bei dieser Größe mehrere Kräfte und ein Fahrzeug nötig.':''),dl:'Rechtzeitig planen',of:'DRK / DLRG / Malteser / Johanniter'});
-  if(food){ sec(cl,'Gastronomie'); ri(cl,{t:'Anzeige §2 LGastG BW — pro Standbetreiber',w:'Achtung: §12 GastG gilt nicht mehr. Jeder Stand muss einzeln angezeigt werden. Sie erhalten keine Bestätigung.',dl:'Mind. 2 Wochen vorher',of:'Gewerbe- und Gaststättenrecht, Schloßstr. 73',isNew:true,fm:'Online: service-bw.de'}); ri(cl,{t:'Reisegewerbekarte für Standbetreiber',w:'Neu: Jeder Standbetreiber braucht eine Reisegewerbekarte — auch Vereinsstände.',dl:'Vor der Veranstaltung',of:'Gewerbe- und Gaststättenrecht',isNew:true}); ri(cl,{t:'Hygiene-Auflagen einhalten',w:'Vor der Eröffnung: Begehung mit Lebensmittelkontrolle. Festes Dach, abwaschbare Böden, Kühlmöglichkeiten, Handwaschgelegenheit.',dl:'Ab Aufbau',of:'Lebensmittelüberwachung'}); }
+  if(food){ sec(cl,'Gastronomie'); ri(cl,{t:'Anzeige §2 LGastG BW — pro Standbetreiber',w:'Achtung: §12 GastG gilt nicht mehr. Jeder Stand muss einzeln angezeigt werden. Sie erhalten keine Bestätigung.',dl:'Mind. 2 Wochen vorher',of:'Gewerbe- und Gaststättenrecht, Schloßstr. 73',isNew:true,fm:'Separates Online-Verfahren'}); ri(cl,{t:'Reisegewerbekarte für Standbetreiber',w:'Neu: Jeder Standbetreiber braucht eine Reisegewerbekarte — auch Vereinsstände.',dl:'Vor der Veranstaltung',of:'Gewerbe- und Gaststättenrecht',isNew:true}); ri(cl,{t:'Hygiene-Auflagen einhalten',w:'Vor der Eröffnung: Begehung mit Lebensmittelkontrolle. Festes Dach, abwaschbare Böden, Kühlmöglichkeiten, Handwaschgelegenheit.',dl:'Ab Aufbau',of:'Lebensmittelüberwachung'}); }
   if(hasBuilds){ sec(cl,'Fliegende Bauten'); ri(cl,{t:'Prüfbuch für jeden Fliegenden Bau',w:'Ähnlich wie ein TÜV-Bericht. Ohne gültiges Prüfbuch darf die Anlage nicht aufgestellt werden.',dl:`${weeks} Wochen vorher (mit Antrag)`,of:'Baurechtsamt, Eberhardstr. 33'}); ri(cl,{t:'Rettungswege rund um Aufbauten freihalten',w:'Abstand zu Gebäuden mind. 2 m. Feuerwehrzufahrten dauerhaft zugänglich.',dl:'Gilt ab Aufbau',of:'Branddirektion'}); }
   if(hasMusik){ sec(cl,'Musik & Lärm'); ri(cl,{t:'Musikzeiten im Antrag angeben',w:'Das Amt prüft Konflikte mit der Nachtruhe. Sonntags keine Lärmaktionen 9–11 Uhr.',dl:'Im Antrag angeben',of:'Bürgerservice Veranstaltungen'}); ri(cl,{t:'Nachtruhe ab 22:00 Uhr',w:'Musik muss vor 22:00 enden. In geschlossenen Zelten bis 23:00 — nur mit Genehmigung.',dl:'Gilt während der Veranstaltung',of:''}); }
   if(traffic){ sec(cl,'Verkehrsmaßnahmen'); ri(cl,{t:'MVAS-Schulungsnachweis',w:'Neu 2026: Verantwortliche Person für Verkehrssicherung braucht MVAS-Schulungsnachweis.',dl:`${weeks} Wochen vorher`,of:'Tiefbauamt',isNew:true}); ri(cl,{t:'Verkehrsrechtliche Anordnung (§§45, 46 StVO)',w:'Jede Sperrung und jedes Halteverbot muss amtlich angeordnet werden. Fachfirma spart 15% Verwaltungsgebühr.',dl:`${weeks} Wochen vorher`,of:'Tiefbauamt'}); }
+
+  const nochFehlt = [
+    'Belegungsplan 1:500',
+    'Versicherungsnachweis',
+    hasBuilds ? 'Prüfbuch' : null,
+    traffic ? 'MVAS-Nachweis' : null,
+    'Sanitätsdienst-Bestätigung',
+    veryBig ? 'Sicherheitskonzept' : null,
+    food ? 'Anzeige LGastG (pro Stand)' : null,
+    food ? 'Reisegewerbekarte' : null,
+  ].filter(Boolean);
+  document.getElementById('nochFehltBox').innerHTML =
+    '<h3>Noch nicht automatisch erstellt</h3>' +
+    nochFehlt.map(i => `<div class="noch-item">${i}</div>`).join('');
 
   // Timeline
   const tl = document.getElementById('tlBox');
@@ -713,9 +754,10 @@ function buildChecklist() {
 }
 
 function sec(p,t){ const d=document.createElement('div'); d.className='sec-head'; d.textContent=t; p.appendChild(d); }
-const FM_LABELS={'antrag_source.pdf':'Leeres Originalformular ansehen','erklaerung_source.pdf':'Leere Original-Veranstaltererklärung ansehen'};
-function fmTag(fm,fmLabel){ if(!fm)return''; if(fm.endsWith('.pdf')){ const label=fmLabel||FM_LABELS[fm]||'Formular ansehen'; return `<a href="${fm}" target="_blank" rel="noopener" class="tag tag-office">📄 ${label}</a>`; } return `<span class="tag tag-office">📄 ${fm}</span>`; }
-function ri(p,{t,w,dl,of,fm,fmLabel,isNew,warn}){ const d=document.createElement('div'); d.className='r-item'; d.innerHTML=`<div class="r-check" onclick="this.classList.toggle('done')"></div><div><div class="r-title">${t}</div><div class="r-why">${w}</div><div class="r-tags">${dl?`<span class="tag ${warn?'tag-warn':'tag-dl'}">⏱ ${dl}</span>`:''}${of?`<span class="tag tag-office">${of}</span>`:''}${fmTag(fm,fmLabel)}${isNew?`<span class="tag tag-new">NEU</span>`:''}</div></div>`; p.appendChild(d); }
+const FM_LABELS={'antrag_source.pdf':'Leeres Originalformular ansehen','erklaerung_source.pdf':'Leeres Originalformular ansehen'};
+function fmTag(fm,fmLabel){ if(!fm)return''; if(fm.endsWith('.pdf')){ const label=fmLabel||FM_LABELS[fm]||'Leeres Originalformular ansehen'; return `<a href="${fm}" target="_blank" rel="noopener" class="tag tag-office">📄 ${label}</a>`; } return `<span class="tag tag-office">📄 ${fm}</span>`; }
+function autoFillTag(){ return `<button type="button" class="tag tag-autofill" onclick="goToFormulare()">⚡ Amtliches Formular erstellen</button>`; }
+function ri(p,{t,w,dl,of,fm,fmLabel,autoFill,isNew,warn}){ const d=document.createElement('div'); d.className='r-item'; d.innerHTML=`<div class="r-check" onclick="this.classList.toggle('done')"></div><div><div class="r-title">${t}</div><div class="r-why">${w}</div><div class="r-tags">${dl?`<span class="tag ${warn?'tag-warn':'tag-dl'}">⏱ ${dl}</span>`:''}${of?`<span class="tag tag-office">${of}</span>`:''}${fmTag(fm,fmLabel)}${autoFill?autoFillTag():''}${isNew?`<span class="tag tag-new">NEU</span>`:''}</div></div>`; p.appendChild(d); }
 
 // ═══════════════════════════════════════
 // TRANSITION TO FORMULARE
