@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veranstaltungsberater Stuttgart — Formulare</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+:root {
+  --ink: #1c1810;
+  --paper: #f4efe4;
+  --cream: #faf7f0;
+  --amber: #c87d0e;
+  --amber-pale: #fdf3e0;
+  --green: #2a5e40;
+  --green-pale: #eaf3ee;
+  --red: #b03020;
+  --rule: #ddd5c0;
+  --muted: #8a7d68;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4', Georgia, serif; min-height: 100vh; }
+
+.site-header { background: var(--ink); padding: 0 24px; }
+.header-inner { max-width: 700px; margin: 0 auto; padding: 24px 0 20px; }
+.header-badge { background: var(--amber); color: white; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; padding: 3px 10px; display: inline-block; margin-bottom: 10px; }
+.header-title { font-family: 'Playfair Display', serif; font-size: clamp(22px, 4vw, 32px); color: var(--paper); font-weight: 700; line-height: 1.1; }
+.header-title em { font-style: italic; color: #e8c97a; font-weight: 400; }
+.header-sub { font-size: 13px; color: rgba(244,239,228,.5); font-weight: 300; margin-top: 6px; }
+
+.main { max-width: 700px; margin: 0 auto; padding: 36px 24px 100px; }
+
+/* Steps indicator */
+.steps { display: flex; gap: 0; margin-bottom: 36px; border: 1.5px solid var(--rule); overflow: hidden; }
+.step { flex: 1; padding: 10px 8px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--cream); border-right: 1px solid var(--rule); cursor: pointer; transition: all .2s; }
+.step:last-child { border-right: none; }
+.step.active { background: var(--ink); color: var(--paper); }
+.step.done { background: var(--green); color: white; }
+
+/* Form sections */
+.form-section { display: none; animation: fadeUp .3s ease; }
+.form-section.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+.section-title { font-family: 'Playfair Display', serif; font-size: clamp(18px, 3.5vw, 24px); font-weight: 700; margin-bottom: 6px; }
+.section-hint { font-size: 13px; color: var(--muted); font-weight: 300; line-height: 1.65; margin-bottom: 28px; }
+
+/* Form fields */
+.field-group { margin-bottom: 20px; }
+.field-group label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink); margin-bottom: 5px; font-family: 'IBM Plex Mono', monospace; letter-spacing: .04em; text-transform: uppercase; }
+.field-group .field-hint { font-size: 11.5px; color: var(--muted); margin-bottom: 6px; font-weight: 300; font-style: italic; }
+.field-group input, .field-group select, .field-group textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--rule); background: white;
+  font-family: 'Source Serif 4', serif; font-size: 14px; color: var(--ink);
+  transition: border-color .2s; outline: none;
+}
+.field-group input:focus, .field-group select:focus, .field-group textarea:focus { border-color: var(--ink); }
+.field-group textarea { resize: vertical; min-height: 80px; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* Checkboxes */
+.check-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.check-item { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.check-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--ink); }
+.check-item span { font-size: 13.5px; }
+
+/* Navigation */
+.nav-row { display: flex; gap: 12px; margin-top: 32px; align-items: center; }
+.btn-primary {
+  padding: 12px 28px; background: var(--ink); color: var(--paper);
+  border: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .2s;
+}
+.btn-primary:hover { background: #333; }
+.btn-secondary {
+  padding: 12px 20px; background: transparent; color: var(--muted);
+  border: 1.5px solid var(--rule); font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .2s;
+}
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+.btn-green { background: var(--green); }
+.btn-green:hover { background: #1e4a30; }
+
+/* Result */
+.result-card { background: var(--green-pale); border: 1.5px solid var(--green); padding: 28px 28px 24px; margin-bottom: 20px; }
+.result-card h2 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 8px; color: var(--green); }
+.result-card p { font-size: 13.5px; line-height: 1.7; color: #1e3d28; font-weight: 300; }
+
+.download-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+.download-card {
+  border: 1.5px solid var(--ink); background: white; padding: 18px 18px 16px;
+  cursor: pointer; transition: all .2s; text-align: left;
+}
+.download-card:hover { background: var(--ink); color: var(--paper); transform: translateY(-2px); }
+.download-card:hover .dc-icon { filter: invert(1); }
+.dc-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+.dc-name { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+.dc-sub { font-size: 11px; color: var(--muted); font-weight: 300; }
+.download-card:hover .dc-sub { color: rgba(244,239,232,.6); }
+
+.progress-bar { height: 3px; background: var(--rule); margin-bottom: 32px; }
+.progress-fill { height: 100%; background: var(--amber); transition: width .4s ease; }
+
+.loading { display: none; text-align: center; padding: 40px; }
+.loading.show { display: block; }
+.loading-spinner { width: 32px; height: 32px; border: 2px solid var(--rule); border-top-color: var(--amber); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading p { font-size: 13px; color: var(--muted); font-weight: 300; }
+
+@media (max-width: 480px) {
+  .field-row, .field-row-3 { grid-template-columns: 1fr; }
+  .download-grid { grid-template-columns: 1fr; }
+  .steps { flex-wrap: wrap; }
+  .step { flex: 0 0 50%; border-bottom: 1px solid var(--rule); }
+  .main { padding: 24px 16px 80px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-badge">Stuttgart — MVP 2</div>
+    <div class="header-title">Veranstaltungs-<em>Formulare</em></div>
+    <div class="header-sub">Einmal ausfüllen — beide amtlichen Formulare werden automatisch erstellt</div>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="steps">
+    <div class="step active" id="tab1" onclick="goStep(1)">① Veranstalter</div>
+    <div class="step" id="tab2" onclick="goStep(2)">② Veranstaltung</div>
+    <div class="step" id="tab3" onclick="goStep(3)">③ Ort & Aufbauten</div>
+    <div class="step" id="tab4" onclick="goStep(4)">④ Fertigstellen</div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:25%"></div></div>
+
+  <!-- Schritt 1: Veranstalter -->
+  <div class="form-section active" id="sec1">
+    <div class="section-title">Wer veranstaltet?</div>
+    <div class="section-hint">Diese Angaben erscheinen auf beiden amtlichen Formularen — dem Antrag §29 StVO und der Veranstaltererklärung.</div>
+
+    <div class="field-group">
+      <label>Name der Veranstaltung</label>
+      <input type="text" id="veranstaltungsname" placeholder="z.B. Stuttgarter Sommerfest 2026">
+    </div>
+    <div class="field-group">
+      <label>Institution / Verein / Organisation</label>
+      <div class="field-hint">Offizieller Name des Veranstalters</div>
+      <input type="text" id="institution" placeholder="z.B. Bürgerverein Mitte Stuttgart e.V.">
+    </div>
+    <div class="field-group">
+      <label>Anschrift</label>
+      <input type="text" id="anschrift" placeholder="Straße, Hausnummer, PLZ, Ort">
+    </div>
+    <div class="field-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:13.5px;">
+        <input type="checkbox" id="gemeinnuetzig" style="width:16px;height:16px;accent-color:var(--ink)">
+        Organisation ist gemeinnützig (Freistellungsbescheid vorhanden)
+      </label>
+    </div>
+
+    <div style="border-top:1px solid var(--rule);margin:24px 0;"></div>
+    <div class="section-title" style="font-size:18px;margin-bottom:16px;">Ansprechperson</div>
+
+    <div class="field-group">
+      <label>Name (Zuname, Vorname)</label>
+      <input type="text" id="ansprech_name" placeholder="z.B. Mustermann, Max">
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Telefon</label>
+        <input type="tel" id="ansprech_tel" placeholder="0711 ...">
+      </div>
+      <div class="field-group">
+        <label>Mobiltelefon</label>
+        <input type="tel" id="ansprech_mobil" placeholder="0170 ...">
+      </div>
+    </div>
+    <div class="field-group">
+      <label>E-Mail</label>
+      <input type="email" id="ansprech_email" placeholder="name@organisation.de">
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-primary" onclick="goStep(2)">Weiter →</button>
+    </div>
+  </div>
+
+  <!-- Schritt 2: Veranstaltung -->
+  <div class="form-section" id="sec2">
+    <div class="section-title">Wann findet es statt?</div>
+    <div class="section-hint">Geben Sie alle Zeiträume an — auch den Auf- und Abbau. Das Amt prüft Konflikte mit anderen Veranstaltungen.</div>
+
+    <div style="background:var(--amber-pale);border-left:3px solid var(--amber);padding:12px 14px;margin-bottom:24px;font-size:13px;color:#5a4020;font-weight:300;line-height:1.6;">
+      <strong>Nachtruhe:</strong> 22:00–06:00 Uhr. Musik und Ausschank müssen davor enden. Sonntags kein Aufbau 9–11 Uhr.
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label>Aufbau — Datum</label>
+        <input type="text" id="aufbau_datum" placeholder="TT.MM.JJJJ">
+      </div>
+      <div class="field-group">
+        <label>Aufbau — Uhrzeit</label>
+        <input type="text" id="aufbau_uhrzeit" placeholder="08:00 - 18:00">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label>Veranstaltung — Datum</label>
+        <input type="text" id="veranstaltung_datum" placeholder="TT.MM.JJJJ">
+      </div>
+      <div class="field-group">
+        <label>Veranstaltung — Uhrzeit</label>
+        <input type="text" id="veranstaltung_uhrzeit" placeholder="12:00 - 22:00">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label>Musikdarbietungen</label>
+        <div class="field-hint">Von - bis (vor 22:00 Uhr!)</div>
+        <input type="text" id="musik_uhrzeit" placeholder="14:00 - 21:30">
+      </div>
+      <div class="field-group">
+        <label>Ende Ausschank</label>
+        <input type="text" id="ausschank_ende" placeholder="21:30">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label>Abbau — Datum</label>
+        <input type="text" id="abbau_datum" placeholder="TT.MM.JJJJ">
+      </div>
+      <div class="field-group">
+        <label>Abbau — Uhrzeit</label>
+        <input type="text" id="abbau_uhrzeit" placeholder="09:00 - 14:00">
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--rule);margin:24px 0;"></div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label>Besucher gleichzeitig</label>
+        <input type="number" id="besucher_gleichzeitig" placeholder="z.B. 300">
+      </div>
+      <div class="field-group">
+        <label>Besucher gesamt</label>
+        <input type="number" id="besucher_gesamt" placeholder="z.B. 800">
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goStep(1)">← Zurück</button>
+      <button class="btn-primary" onclick="goStep(3)">Weiter →</button>
+    </div>
+  </div>
+
+  <!-- Schritt 3: Ort & Aufbauten -->
+  <div class="form-section" id="sec3">
+    <div class="section-title">Wo und was?</div>
+    <div class="section-hint">Diese Angaben bestimmen, welche Checkboxen im amtlichen Formular angekreuzt werden.</div>
+
+    <div class="field-group">
+      <label>Beschreibung des Veranstaltungsorts</label>
+      <div class="field-hint">Stadtteil, Straße, Platzbezeichnung</div>
+      <textarea id="ort_beschreibung" placeholder="z.B. Marktplatz Stuttgart-Mitte, zwischen Rathaus und Markthalle, entlang der Kirchstraße"></textarea>
+    </div>
+
+    <div class="field-group">
+      <label>Art der Verkehrsfläche</label>
+      <select id="ort_typ">
+        <option value="strasse">Straßenfläche</option>
+        <option value="gehweg">Gehwegfläche</option>
+        <option value="fussgaenger">Fußgängerzone</option>
+      </select>
+    </div>
+
+    <div style="border-top:1px solid var(--rule);margin:24px 0;"></div>
+
+    <div class="field-group">
+      <label>Aufbauten auf der Fläche</label>
+      <div class="field-hint">Alles ankreuzen, was vorhanden ist</div>
+      <div class="check-group" style="margin-top:8px;">
+        <label class="check-item"><input type="checkbox" id="aufbau_garn"><span>Garnituren</span></label>
+        <label class="check-item"><input type="checkbox" id="aufbau_verk"><span>Verkaufsstände</span></label>
+        <label class="check-item"><input type="checkbox" id="aufbau_zelt"><span>Zelte / Pavillons</span></label>
+        <label class="check-item"><input type="checkbox" id="aufbau_buehne"><span>Bühne</span></label>
+        <label class="check-item"><input type="checkbox" id="aufbau_kar"><span>Karussell / Fahrgeschäft</span></label>
+        <label class="check-item"><input type="checkbox" id="aufbau_huepf"><span>Hüpfburg</span></label>
+        <label class="check-item"><input type="checkbox" id="aufbau_spiel"><span>Spielstraße</span></label>
+        <label class="check-item"><input type="checkbox" id="aufbau_tier"><span>Tiere</span></label>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Flüssiggas-Verwendung</label>
+      <select id="fluessiggas">
+        <option value="nein">Nein</option>
+        <option value="ja">Ja — Standorte im Belegungsplan markieren!</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label>Anwohnerbenachrichtigung</label>
+      <select id="anwohner">
+        <option value="briefkasten">Briefkasteneinwurf</option>
+        <option value="tagespresse">Tagespresse</option>
+        <option value="amtsblatt">Amtsblatt</option>
+      </select>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goStep(2)">← Zurück</button>
+      <button class="btn-primary" onclick="goStep(4)">Weiter →</button>
+    </div>
+  </div>
+
+  <!-- Schritt 4: Fertigstellen -->
+  <div class="form-section" id="sec4">
+    <div class="section-title">Formulare erstellen</div>
+    <div class="section-hint">Bitte geben Sie noch das heutige Datum an. Dann werden beide amtlichen Formulare automatisch ausgefüllt und stehen zum Download bereit.</div>
+
+    <div class="field-row">
+      <div class="field-group">
+        <label>Datum der Unterschrift</label>
+        <input type="text" id="datum_unterschrift" placeholder="TT.MM.JJJJ" id="datum_unterschrift">
+      </div>
+      <div class="field-group">
+        <label>Stadt (für Unterschriftszeile)</label>
+        <input type="text" id="ort_stadt" placeholder="Stuttgart" value="Stuttgart">
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Wiederkehrende Veranstaltung?</label>
+      <select id="wiederkehrend">
+        <option value="nein">Nein — erstmalig</option>
+        <option value="ja">Ja — hat schon stattgefunden</option>
+      </select>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-secondary" onclick="goStep(3)">← Zurück</button>
+      <button class="btn-primary btn-green" onclick="generatePDFs()">📄 Formulare erstellen</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loadingDiv">
+      <div class="loading-spinner"></div>
+      <p>Formulare werden ausgefüllt…</p>
+    </div>
+
+    <!-- Result -->
+    <div id="resultDiv" style="display:none;margin-top:28px;">
+      <div class="result-card">
+        <h2>✓ Ihre Formulare sind fertig</h2>
+        <p>Beide amtlichen Formulare wurden mit Ihren Angaben ausgefüllt. Laden Sie sie herunter, unterschreiben Sie sie und reichen Sie sie beim <strong>Bürgerservice Veranstaltungen</strong> ein.<br><br>
+        <strong>Wichtig:</strong> Die Veranstalterhaftpflichtversicherung muss spätestens <strong>2 Wochen vor</strong> der Veranstaltung nachgereicht werden.</p>
+      </div>
+      <div class="download-grid">
+        <div class="download-card" id="dlAntrag">
+          <span class="dc-icon">📋</span>
+          <div class="dc-name">Antrag §29 StVO</div>
+          <div class="dc-sub">Antrag_Verkehrsflaeche.pdf</div>
+        </div>
+        <div class="download-card" id="dlErklaerung">
+          <span class="dc-icon">📄</span>
+          <div class="dc-name">Veranstaltererklärung</div>
+          <div class="dc-sub">Veranstalterererklaerung.pdf</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:14px 16px;background:var(--amber-pale);border:1px solid var(--amber);font-size:12.5px;color:#5a4020;line-height:1.6;">
+        <strong>Nächste Schritte:</strong> Formulare ausdrucken → unterschreiben → Belegungsplan 1:500 beifügen → beim Bürgerservice Veranstaltungen einreichen (Eberhardstr. 35, 70173 Stuttgart).
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let currentStep = 1;
+let pdfBlobs = {};
+
+function goStep(n) {
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.step').forEach((t,i) => {
+    t.classList.remove('active');
+    if (i + 1 < n) t.classList.add('done');
+    else t.classList.remove('done');
+  });
+  document.getElementById('sec' + n).classList.add('active');
+  document.getElementById('tab' + n).classList.add('active');
+  document.getElementById('progressFill').style.width = (n * 25) + '%';
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function collectData() {
+  const aufbauten = [];
+  if (document.getElementById('aufbau_garn').checked) aufbauten.push('garnituren');
+  if (document.getElementById('aufbau_verk').checked) aufbauten.push('verkaufsstaende');
+  if (document.getElementById('aufbau_zelt').checked) aufbauten.push('zelte');
+  if (document.getElementById('aufbau_buehne').checked) aufbauten.push('buehne');
+  if (document.getElementById('aufbau_kar').checked) aufbauten.push('karussell');
+  if (document.getElementById('aufbau_huepf').checked) aufbauten.push('huepfburg');
+  if (document.getElementById('aufbau_spiel').checked) aufbauten.push('spielstrasse');
+  if (document.getElementById('aufbau_tier').checked) aufbauten.push('tiere');
+
+  return {
+    veranstaltungsname: v('veranstaltungsname'),
+    institution: v('institution'),
+    gemeinnuetzig: document.getElementById('gemeinnuetzig').checked,
+    anschrift: v('anschrift'),
+    ansprech_name: v('ansprech_name'),
+    ansprech_tel: v('ansprech_tel'),
+    ansprech_mobil: v('ansprech_mobil'),
+    ansprech_email: v('ansprech_email'),
+    aufbau_datum: v('aufbau_datum'),
+    aufbau_uhrzeit: v('aufbau_uhrzeit'),
+    veranstaltung_datum: v('veranstaltung_datum'),
+    veranstaltung_uhrzeit: v('veranstaltung_uhrzeit'),
+    musik_uhrzeit: v('musik_uhrzeit'),
+    ausschank_ende: v('ausschank_ende'),
+    abbau_datum: v('abbau_datum'),
+    abbau_uhrzeit: v('abbau_uhrzeit'),
+    besucher_gleichzeitig: v('besucher_gleichzeitig'),
+    besucher_gesamt: v('besucher_gesamt'),
+    ort_beschreibung: v('ort_beschreibung'),
+    ort_typ: v('ort_typ'),
+    aufbauten,
+    fluessiggas: v('fluessiggas') === 'ja',
+    anwohner_benachrichtigung: v('anwohner'),
+    datum_unterschrift: v('datum_unterschrift'),
+    ort_stadt: v('ort_stadt') || 'Stuttgart',
+    wiederkehrend: v('wiederkehrend') === 'ja',
+  };
+}
+
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+async function generatePDFs() {
+  const data = collectData();
+  document.getElementById('loadingDiv').classList.add('show');
+  document.getElementById('resultDiv').style.display = 'none';
+
+  try {
+    const [antragPdf, erklaerungPdf] = await Promise.all([
+      fillAntrag(data),
+      fillErklaerung(data),
+    ]);
+
+    pdfBlobs.antrag = antragPdf;
+    pdfBlobs.erklaerung = erklaerungPdf;
+
+    document.getElementById('dlAntrag').onclick = () => downloadBlob(antragPdf, 'Antrag_Verkehrsflaeche.pdf');
+    document.getElementById('dlErklaerung').onclick = () => downloadBlob(erklaerungPdf, 'Veranstalterererklaerung.pdf');
+
+    document.getElementById('loadingDiv').classList.remove('show');
+    document.getElementById('resultDiv').style.display = 'block';
+  } catch (err) {
+    document.getElementById('loadingDiv').classList.remove('show');
+    alert('Fehler beim Erstellen der PDFs: ' + err.message);
+    console.error(err);
+  }
+}
+
+async function fetchPdf(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('PDF konnte nicht geladen werden: ' + url);
+  return await response.arrayBuffer();
+}
+
+async function fillAntrag(data) {
+  const { PDFDocument } = PDFLib;
+
+  // Load the official PDF
+  const pdfUrl = 'antrag_source.pdf';
+  let pdfBytes;
+  try {
+    pdfBytes = await fetchPdf(pdfUrl);
+  } catch(e) {
+    // Fallback: create a simple PDF with the data
+    return createFallbackPdf(data, 'Antrag auf Überlassung öffentlicher Verkehrsfläche');
+  }
+
+  const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+  const form = pdfDoc.getForm();
+
+  const safeSet = (fieldName, value) => {
+    try {
+      if (!value && value !== false) return;
+      const field = form.getField(fieldName);
+      if (field.constructor.name === 'PDFTextField') {
+        field.setText(String(value));
+      } else if (field.constructor.name === 'PDFCheckBox') {
+        if (value) field.check(); else field.uncheck();
+      }
+    } catch(e) { /* field may not exist */ }
+  };
+
+  const safeCheck = (fieldName) => {
+    try { form.getCheckBox(fieldName).check(); } catch(e) {}
+  };
+
+  safeSet('NameVer', data.veranstaltungsname);
+  safeSet('NameInst', data.institution);
+  if (data.gemeinnuetzig) safeCheck('gemüt');
+  safeSet('Anschrift', data.anschrift);
+  safeSet('AnsprNam', data.ansprech_name);
+  safeSet('AnsprTelp', data.ansprech_tel);
+  safeSet('AnsprTelM', data.ansprech_mobil);
+  safeSet('AnsprNamEM', data.ansprech_email);
+  safeSet('VerantNam', data.ansprech_name);
+  safeSet('VerantTelp', data.ansprech_tel);
+  safeSet('VerantwTelM', data.ansprech_mobil);
+  safeSet('AufDat', data.aufbau_datum);
+  safeSet('UhrAuf', data.aufbau_uhrzeit);
+  safeSet('VerDat', data.veranstaltung_datum);
+  safeSet('VerUhrAuf', data.veranstaltung_uhrzeit);
+  safeSet('MusUhr', data.musik_uhrzeit);
+  safeSet('EndAus', data.ausschank_ende);
+  safeSet('AbDat', data.abbau_datum);
+  safeSet('Abuhr', data.abbau_uhrzeit);
+  safeSet('gleichzanw', data.besucher_gleichzeitig);
+  safeSet('gesamtanw', data.besucher_gesamt);
+  safeSet('AngaOrt', data.ort_beschreibung);
+  safeSet('DatUnt', (data.ort_stadt || 'Stuttgart') + ', ' + data.datum_unterschrift);
+
+  // Ort checkboxes
+  if (data.ort_typ === 'strasse') safeCheck('Strfl');
+  else if (data.ort_typ === 'gehweg') safeCheck('Gehw');
+  else if (data.ort_typ === 'fussgaenger') safeCheck('Fußg');
+
+  // Aufbauten
+  const cbMap = { garnituren:'Garn', verkaufsstaende:'Verk', zelte:'ZelPav', buehne:'Bühne', karussell:'KarFahr', huepfburg:'Hüpf', spielstrasse:'Spiel', tiere:'Tier' };
+  (data.aufbauten || []).forEach(k => { if (cbMap[k]) safeCheck(cbMap[k]); });
+
+  // Flüssiggas
+  if (data.fluessiggas === true) safeCheck('Flüj');
+  else if (data.fluessiggas === false) safeCheck('Flün');
+
+  // Anwohner
+  const anwMap = { briefkasten:'BenBr', tagespresse:'BenTa', amtsblatt:'BenAm' };
+  if (anwMap[data.anwohner_benachrichtigung]) safeCheck(anwMap[data.anwohner_benachrichtigung]);
+
+  form.flatten();
+  const filledBytes = await pdfDoc.save();
+  return new Blob([filledBytes], { type: 'application/pdf' });
+}
+
+async function fillErklaerung(data) {
+  const { PDFDocument } = PDFLib;
+
+  const pdfUrl = 'erklaerung_source.pdf';
+  let pdfBytes;
+  try {
+    pdfBytes = await fetchPdf(pdfUrl);
+  } catch(e) {
+    return createFallbackPdf(data, 'Veranstaltererklärung §29 StVO');
+  }
+
+  const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+  const form = pdfDoc.getForm();
+
+  const safeSet = (fieldName, value) => {
+    try {
+      if (!value) return;
+      form.getTextField(fieldName).setText(String(value));
+    } catch(e) {}
+  };
+  const safeCheck = (fieldName) => {
+    try { form.getCheckBox(fieldName).check(); } catch(e) {}
+  };
+
+  safeSet('BeaInst', data.institution);
+  if (data.gemeinnuetzig) safeCheck('gemeinnützig');
+  safeSet('Anschrift Straße Hausnummer Postleitzahl Ort', data.anschrift);
+  safeSet('Ansprechpartnerin Zuname Vorname', data.ansprech_name);
+  safeSet('Datum und Unterschrift', (data.ort_stadt || 'Stuttgart') + ', ' + data.datum_unterschrift);
+
+  form.flatten();
+  const filledBytes = await pdfDoc.save();
+  return new Blob([filledBytes], { type: 'application/pdf' });
+}
+
+async function createFallbackPdf(data, title) {
+  // Simple text-based fallback if source PDFs not available
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const page = doc.addPage([595, 842]);
+  const { height } = page.getSize();
+
+  page.drawText(title, { x: 50, y: height - 60, size: 16, font, color: rgb(0,0,0) });
+  page.drawText('Stand: Juni 2026 — Landeshauptstadt Stuttgart', { x: 50, y: height - 85, size: 10, font, color: rgb(0.5,0.5,0.5) });
+
+  let y = height - 130;
+  const lines = [
+    ['Veranstaltung', data.veranstaltungsname],
+    ['Institution', data.institution],
+    ['Anschrift', data.anschrift],
+    ['Ansprechperson', data.ansprech_name],
+    ['Telefon', data.ansprech_tel],
+    ['E-Mail', data.ansprech_email],
+    ['Veranstaltungsdatum', data.veranstaltung_datum + ' ' + data.veranstaltung_uhrzeit],
+    ['Aufbau', data.aufbau_datum + ' ' + data.aufbau_uhrzeit],
+    ['Abbau', data.abbau_datum + ' ' + data.abbau_uhrzeit],
+    ['Besucher', data.besucher_gleichzeitig + ' gleichzeitig / ' + data.besucher_gesamt + ' gesamt'],
+    ['Ort', data.ort_beschreibung],
+    ['Datum', data.ort_stadt + ', ' + data.datum_unterschrift],
+  ];
+  for (const [label, val] of lines) {
+    if (!val) continue;
+    page.drawText(label + ':', { x: 50, y, size: 9, font, color: rgb(0.4,0.4,0.4) });
+    page.drawText(val, { x: 180, y, size: 10, font });
+    y -= 22;
+  }
+
+  const bytes = await doc.save();
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+</script>
+</body>
+</html>
