@@ -106,7 +106,6 @@ body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4
 .formulare-cta { border: 2px solid var(--amber); background: var(--amber-pale); padding: 22px 24px; margin: 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .formulare-cta .cta-text h3 { font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 5px; }
 .formulare-cta .cta-text p { font-size: 13px; color: #5a4020; font-weight: 300; line-height: 1.55; }
-.formulare-cta .cta-text p + p { margin-top: 6px; }
 .cta-btn { padding: 12px 24px; background: var(--amber); color: white; border: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .2s; white-space: nowrap; flex-shrink: 0; }
 .cta-btn:hover { background: #a66a0a; }
 
@@ -126,8 +125,8 @@ body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4
 .tag-dl { border-color: var(--red); color: var(--red); }
 .tag-warn { border-color: var(--red); color: var(--red); background: #fdf0ee; }
 .tag-office { border-color: var(--muted); color: var(--muted); }
-.tag-office a { color: inherit; text-decoration: none; }
-.tag-office a:hover { text-decoration: underline; }
+a.tag-office { text-decoration: none; cursor: pointer; }
+a.tag-office:hover { text-decoration: underline; }
 .tag-new { border-color: var(--amber); color: var(--amber); background: var(--amber-pale); }
 
 .tl-box { border: 1.5px solid var(--amber); background: var(--amber-pale); padding: 20px 24px; margin-top: 20px; }
@@ -365,9 +364,7 @@ body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4
       <div class="formulare-cta">
         <div class="cta-text">
           <h3>Formulare automatisch ausfüllen</h3>
-          <p>Wir übernehmen Ihre Angaben direkt.</p>
-          <p>Die offiziellen Formulare sind in wenigen Minuten ausgefüllt und bereit zur Einreichung bei der Stadt Stuttgart.</p>
-          <p>Fehlende Nachweise oder Unterlagen zeigen wir Ihnen separat an.</p>
+          <p>Wir übernehmen Ihre Angaben direkt.<br><br>Die offiziellen Formulare sind in wenigen Minuten ausgefüllt und bereit zur Einreichung bei der Stadt Stuttgart.<br><br>Fehlende Nachweise oder Unterlagen zeigen wir Ihnen separat an.</p>
         </div>
         <button class="cta-btn" onclick="goToFormulare()">Formulare ausfüllen →</button>
       </div>
@@ -550,7 +547,7 @@ body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4
         <p>Beide amtlichen Formulare wurden ausgefüllt. Herunterladen, unterschreiben und beim <strong>Bürgerservice Veranstaltungen</strong> einreichen (Eberhardstr. 35).</p>
         <div class="download-grid">
           <div class="download-card" id="dlAntrag"><span class="dc-icon">⚡</span><div class="dc-name">Ausgefülltes Formular herunterladen</div><div class="dc-sub">Antrag §29 StVO · Antrag_Verkehrsflaeche.pdf</div></div>
-          <div class="download-card" id="dlErklaerung"><span class="dc-icon">⚡</span><div class="dc-name">Ausgefülltes Formular herunterladen</div><div class="dc-sub">Veranstaltererklärung · Veranstaltererklaerung.pdf</div></div>
+          <div class="download-card" id="dlErklaerung"><span class="dc-icon">⚡</span><div class="dc-name">Ausgefüllte Veranstaltererklärung herunterladen</div><div class="dc-sub">Veranstaltererklärung · Veranstaltererklaerung.pdf</div></div>
         </div>
         <div style="margin-top:14px;padding:12px 14px;background:var(--amber-pale);border:1px solid var(--amber);font-size:12px;color:#5a4020;line-height:1.6;">
           <strong>Nächste Schritte:</strong> Ausdrucken → Unterschreiben → Belegungsplan 1:500 beifügen → Einreichen
@@ -678,8 +675,8 @@ function buildChecklist() {
   // Checklist items
   const cl = document.getElementById('clBody'); cl.innerHTML = '';
   sec(cl,'Pflichtunterlagen — jede öffentliche Veranstaltung');
-  ri(cl,{t:'Antrag auf Überlassung öffentlicher Verkehrsfläche',w:'Das ist der Hauptantrag. Er koordiniert alle Stellen — Polizei, Feuerwehr, Tiefbauamt.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',fm:'Leeres Originalformular ansehen',fmLink:'antrag_source.pdf'});
-  ri(cl,{t:'Veranstaltererklärung §29 StVO',w:'Sie erklären, alle Kosten zu übernehmen — Verkehrszeichen, Reinigung, Schäden.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen'});
+  ri(cl,{t:'Antrag auf Überlassung öffentlicher Verkehrsfläche',w:'Das ist der Hauptantrag. Er koordiniert alle Stellen — Polizei, Feuerwehr, Tiefbauamt.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',fm:'antrag_source.pdf'});
+  ri(cl,{t:'Veranstaltererklärung §29 StVO',w:'Sie erklären, alle Kosten zu übernehmen — Verkehrszeichen, Reinigung, Schäden.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',fm:'erklaerung_source.pdf'});
   ri(cl,{t:'Belegungsplan 1:500 (max. DIN A3)',w:'Die Feuerwehr muss prüfen, ob ihre Fahrzeuge durchkommen. Rettungswege mind. 5 m, Abstand zu Gebäuden mind. 2 m.',dl:`${weeks} Wochen vorher`,of:'Stadtmessungsamt (Plangrundlage kostenpflichtig)'});
   ri(cl,{t:'Veranstaltungshaftpflichtversicherung',w:'Wenn jemand zu Schaden kommt, haften Sie persönlich. Mindest: 250.000 € Personenschäden, 50.000 € Sachschäden.',dl:'Spätestens 2 Wochen vorher',of:'Bürgerservice Veranstaltungen',warn:true});
   ri(cl,{t:'Veranstaltungsleiter/-in benennen',w:'Diese Person ist die einzige Ansprechperson für Polizei und Feuerwehr während der Veranstaltung.',dl:'Im Antrag angeben',of:'Im Antrag angeben'});
@@ -716,7 +713,9 @@ function buildChecklist() {
 }
 
 function sec(p,t){ const d=document.createElement('div'); d.className='sec-head'; d.textContent=t; p.appendChild(d); }
-function ri(p,{t,w,dl,of,fm,fmLink,isNew,warn}){ const d=document.createElement('div'); d.className='r-item'; d.innerHTML=`<div class="r-check" onclick="this.classList.toggle('done')"></div><div><div class="r-title">${t}</div><div class="r-why">${w}</div><div class="r-tags">${dl?`<span class="tag ${warn?'tag-warn':'tag-dl'}">⏱ ${dl}</span>`:''}${of?`<span class="tag tag-office">${of}</span>`:''}${fm?`<span class="tag tag-office">${fmLink?`<a href="${fmLink}" target="_blank" rel="noopener">📄 ${fm}</a>`:`📄 ${fm}`}</span>`:''}${isNew?`<span class="tag tag-new">NEU</span>`:''}</div></div>`; p.appendChild(d); }
+const FM_LABELS={'antrag_source.pdf':'Leeres Originalformular ansehen','erklaerung_source.pdf':'Leere Original-Veranstaltererklärung ansehen'};
+function fmTag(fm,fmLabel){ if(!fm)return''; if(fm.endsWith('.pdf')){ const label=fmLabel||FM_LABELS[fm]||'Formular ansehen'; return `<a href="${fm}" target="_blank" rel="noopener" class="tag tag-office">📄 ${label}</a>`; } return `<span class="tag tag-office">📄 ${fm}</span>`; }
+function ri(p,{t,w,dl,of,fm,fmLabel,isNew,warn}){ const d=document.createElement('div'); d.className='r-item'; d.innerHTML=`<div class="r-check" onclick="this.classList.toggle('done')"></div><div><div class="r-title">${t}</div><div class="r-why">${w}</div><div class="r-tags">${dl?`<span class="tag ${warn?'tag-warn':'tag-dl'}">⏱ ${dl}</span>`:''}${of?`<span class="tag tag-office">${of}</span>`:''}${fmTag(fm,fmLabel)}${isNew?`<span class="tag tag-new">NEU</span>`:''}</div></div>`; p.appendChild(d); }
 
 // ═══════════════════════════════════════
 // TRANSITION TO FORMULARE
