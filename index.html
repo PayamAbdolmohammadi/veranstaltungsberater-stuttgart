@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Veranstaltungsberater Stuttgart</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <style>
 :root {
   --ink: #1c1810;
@@ -20,255 +21,199 @@
   --shadow: rgba(28,24,16,0.08);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: 'Source Serif 4', Georgia, serif;
-  min-height: 100vh;
-}
+body { background: var(--paper); color: var(--ink); font-family: 'Source Serif 4', Georgia, serif; min-height: 100vh; }
 
-/* Header */
+/* ── Header ── */
 .site-header { background: var(--ink); padding: 0 24px; }
-.header-inner {
-  max-width: 700px; margin: 0 auto;
-  padding: 26px 0 22px;
-}
-.header-badge {
-  background: var(--amber); color: white;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
-  padding: 3px 10px; display: inline-block; margin-bottom: 10px;
-}
-.header-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(24px, 4.5vw, 36px);
-  color: var(--paper); font-weight: 700; line-height: 1.1;
-}
+.header-inner { max-width: 700px; margin: 0 auto; padding: 24px 0 20px; }
+.header-badge { background: var(--amber); color: white; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; padding: 3px 10px; display: inline-block; margin-bottom: 10px; }
+.header-title { font-family: 'Playfair Display', serif; font-size: clamp(24px, 4.5vw, 36px); color: var(--paper); font-weight: 700; line-height: 1.1; }
 .header-title em { font-style: italic; color: #e8c97a; font-weight: 400; }
-.header-sub {
-  font-size: 13px; color: rgba(244,239,228,.5);
-  font-weight: 300; margin-top: 7px;
-}
+.header-sub { font-size: 13px; color: rgba(244,239,228,.5); font-weight: 300; margin-top: 7px; }
+.header-desc { margin-top: 14px; font-size: 13px; color: rgba(244,239,228,.6); font-weight: 300; line-height: 1.7; max-width: 480px; }
 
-/* Layout */
+/* ── Phase indicator ── */
+.phase-bar { background: rgba(255,255,255,0.06); border-top: 1px solid rgba(255,255,255,0.08); }
+.phase-inner { max-width: 700px; margin: 0 auto; display: flex; }
+.phase-tab { flex: 1; padding: 10px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(244,239,228,.35); border-right: 1px solid rgba(255,255,255,0.08); transition: all .2s; }
+.phase-tab:last-child { border-right: none; }
+.phase-tab.active { color: #e8c97a; background: rgba(255,255,255,0.05); }
+.phase-tab.done { color: rgba(122,207,160,0.8); }
+
+/* ── Main ── */
 .main { max-width: 700px; margin: 0 auto; padding: 36px 24px 100px; }
 
-/* Progress */
+/* ── Progress dots ── */
 .prog-wrap { display: flex; align-items: center; gap: 5px; margin-bottom: 32px; }
-.p-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--rule); transition: all .3s; flex-shrink: 0;
-}
+.p-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rule); transition: all .3s; flex-shrink: 0; }
 .p-dot.active { background: var(--amber); transform: scale(1.4); }
 .p-dot.done { background: var(--ink); }
 .p-line { flex: 1; height: 1px; background: var(--rule); transition: background .3s; }
 .p-line.done { background: var(--ink); }
-.p-label {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-  color: var(--muted); letter-spacing: .1em; white-space: nowrap; margin-left: 4px;
-}
+.p-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: .1em; white-space: nowrap; margin-left: 4px; }
 
-/* Sofort-Feedback panel */
-.sofort {
-  display: none;
-  border-left: 3px solid var(--green);
-  background: var(--green-pale);
-  padding: 14px 18px 14px 16px;
-  margin-bottom: 22px;
-  animation: fadeUp .35s ease;
-}
+/* ── Sofort-Feedback ── */
+.sofort { display: none; border-left: 3px solid var(--green); background: var(--green-pale); padding: 14px 18px; margin-bottom: 22px; animation: fadeUp .35s ease; }
 .sofort.show { display: block; }
-.sofort .s-label {
-  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-  letter-spacing: .18em; text-transform: uppercase;
-  color: var(--green); margin-bottom: 8px;
-}
-.sofort .s-rows { display: grid; gap: 6px; }
-.sofort .s-row {
-  display: flex; gap: 9px; align-items: baseline;
-  font-size: 13.5px; color: #1a3d28; line-height: 1.5;
-}
+.sofort .s-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
+.sofort .s-row { display: flex; gap: 9px; align-items: baseline; font-size: 13.5px; color: #1a3d28; line-height: 1.5; margin-bottom: 4px; }
 .sofort .s-row::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
-.sofort .s-row strong { font-weight: 600; }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-/* Question */
+/* ── Question cards ── */
 .q-card { display: none; animation: fadeUp .3s ease; }
 .q-card.active { display: block; }
-.q-step {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-  letter-spacing: .15em; color: var(--muted); text-transform: uppercase;
-  margin-bottom: 10px;
-}
-.q-text {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(19px, 3.8vw, 25px); font-weight: 700;
-  line-height: 1.25; margin-bottom: 7px;
-}
-.q-hint {
-  font-size: 13.5px; color: var(--muted); line-height: 1.7;
-  margin-bottom: 26px; font-weight: 300;
-}
+.q-step { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .15em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.q-text { font-family: 'Playfair Display', serif; font-size: clamp(19px, 3.8vw, 25px); font-weight: 700; line-height: 1.25; margin-bottom: 7px; }
+.q-hint { font-size: 13.5px; color: var(--muted); line-height: 1.7; margin-bottom: 26px; font-weight: 300; }
 
-/* Options */
 .opts { display: grid; gap: 7px; }
 .opts.two { grid-template-columns: 1fr 1fr; }
-.opt {
-  background: var(--cream); border: 1.5px solid var(--rule);
-  padding: 13px 15px; cursor: pointer;
-  display: flex; align-items: flex-start; gap: 11px;
-  text-align: left; transition: all .16s;
-}
+.opt { background: var(--cream); border: 1.5px solid var(--rule); padding: 13px 15px; cursor: pointer; display: flex; align-items: flex-start; gap: 11px; text-align: left; transition: all .16s; }
 .opt:hover { border-color: var(--ink); background: white; transform: translateY(-1px); box-shadow: 0 3px 10px var(--shadow); }
 .opt .o-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
 .opt .o-label { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.3; }
 .opt .o-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; font-weight: 300; line-height: 1.4; }
 .opt.unsure { border-style: dashed; background: transparent; }
 
-.back-btn {
-  background: none; border: none; font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--muted); cursor: pointer; padding: 0; margin-bottom: 18px;
-  transition: color .2s; display: inline-flex; align-items: center; gap: 5px;
-}
+.back-btn { background: none; border: none; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); cursor: pointer; padding: 0; margin-bottom: 18px; transition: color .2s; display: inline-flex; align-items: center; gap: 5px; }
 .back-btn:hover { color: var(--ink); }
 
-/* Dead end */
-.dead-end {
-  background: var(--amber-pale); border: 1.5px solid var(--amber);
-  padding: 22px 26px;
-}
+/* ── Dead end ── */
+.dead-end { background: var(--amber-pale); border: 1.5px solid var(--amber); padding: 22px 26px; }
 .dead-end h3 { font-family: 'Playfair Display', serif; font-size: 19px; margin-bottom: 9px; }
 .dead-end p { font-size: 13.5px; line-height: 1.7; color: #5a4020; font-weight: 300; }
 
-/* Result */
+/* ── Checklist result ── */
 .result-wrap { display: none; animation: fadeUp .35s ease; }
 .result-wrap.active { display: block; }
 
-/* Mappe (summary card) */
-.mappe {
-  background: var(--ink); color: var(--paper);
-  padding: 26px 28px; margin-bottom: 0;
-}
-.mappe .m-badge {
-  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-  letter-spacing: .2em; text-transform: uppercase;
-  color: #e8c97a; margin-bottom: 12px;
-}
-.mappe h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(18px, 3vw, 22px); margin-bottom: 16px; line-height: 1.2;
-}
-.mappe-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
-}
-.mappe-item {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.12);
-  padding: 11px 14px;
-}
-.mappe-item .mi-label {
-  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-  letter-spacing: .12em; text-transform: uppercase;
-  color: rgba(244,239,228,.45); margin-bottom: 5px;
-}
+.mappe { background: var(--ink); color: var(--paper); padding: 26px 28px; }
+.mappe .m-badge { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #e8c97a; margin-bottom: 12px; }
+.mappe h2 { font-family: 'Playfair Display', serif; font-size: clamp(18px,3vw,22px); margin-bottom: 16px; line-height: 1.2; }
+.mappe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; }
+.mappe-item { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); padding: 11px 14px; }
+.mappe-item .mi-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: rgba(244,239,228,.45); margin-bottom: 5px; }
 .mappe-item .mi-value { font-size: 13px; color: var(--paper); font-weight: 600; line-height: 1.3; }
 .mappe-item .mi-value.warn { color: #f0c97a; }
-.mappe-checks {
-  margin-top: 16px; display: flex; flex-wrap: wrap; gap: 7px;
-}
-.mappe-check {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-  letter-spacing: .05em; padding: 4px 10px;
-  background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.15);
-  color: rgba(244,239,228,.8);
-  display: flex; align-items: center; gap: 6px;
-}
+.mappe-checks { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 7px; }
+.mappe-check { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .05em; padding: 4px 10px; background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.15); color: rgba(244,239,228,.8); display: flex; align-items: center; gap: 6px; }
 .mappe-check::before { content: '✓'; color: #7ecfa0; font-size: 11px; }
 .mappe-check.warn::before { content: '⚠'; color: #f0c97a; }
 
-/* Checklist body */
+/* ── CTA to Formulare ── */
+.formulare-cta { border: 2px solid var(--amber); background: var(--amber-pale); padding: 22px 24px; margin: 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.formulare-cta .cta-text h3 { font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 5px; }
+.formulare-cta .cta-text p { font-size: 13px; color: #5a4020; font-weight: 300; line-height: 1.55; }
+.cta-btn { padding: 12px 24px; background: var(--amber); color: white; border: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .2s; white-space: nowrap; flex-shrink: 0; }
+.cta-btn:hover { background: #a66a0a; }
+
 .cl-body { border: 1.5px solid var(--ink); border-top: none; }
-.sec-head {
-  background: #e8e0d0; padding: 7px 20px;
-  font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
-  letter-spacing: .15em; text-transform: uppercase; color: var(--muted);
-  border-bottom: 1px solid var(--rule);
-}
-.r-item {
-  border-bottom: 1px solid var(--rule); padding: 17px 20px;
-  display: grid; grid-template-columns: 20px 1fr; gap: 13px;
-  background: white; transition: background .15s;
-}
+.sec-head { background: #e8e0d0; padding: 7px 20px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); }
+.r-item { border-bottom: 1px solid var(--rule); padding: 17px 20px; display: grid; grid-template-columns: 20px 1fr; gap: 13px; background: white; transition: background .15s; }
 .r-item:last-child { border-bottom: none; }
 .r-item:hover { background: #fdfaf5; }
-.r-check {
-  width: 18px; height: 18px; border: 2px solid var(--rule);
-  margin-top: 3px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all .2s; flex-shrink: 0;
-}
+.r-check { width: 18px; height: 18px; border: 2px solid var(--rule); margin-top: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; }
 .r-check:hover { border-color: var(--ink); background: var(--amber-pale); }
 .r-check.done { background: var(--green); border-color: var(--green); }
 .r-check.done::after { content: '✓'; color: white; font-size: 11px; font-weight: bold; }
 .r-title { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 5px; line-height: 1.3; }
-.r-why {
-  font-size: 12.5px; color: #5a4f3c; line-height: 1.65;
-  margin-bottom: 8px; font-weight: 300; font-style: italic;
-  padding-left: 10px; border-left: 2px solid var(--rule);
-}
+.r-why { font-size: 12.5px; color: #5a4f3c; line-height: 1.65; margin-bottom: 8px; font-weight: 300; font-style: italic; padding-left: 10px; border-left: 2px solid var(--rule); }
 .r-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.tag {
-  font-family: 'IBM Plex Mono', monospace; font-size: 9.5px;
-  letter-spacing: .04em; padding: 3px 8px; border: 1px solid; white-space: nowrap;
-}
+.tag { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .04em; padding: 3px 8px; border: 1px solid; white-space: nowrap; }
 .tag-dl { border-color: var(--red); color: var(--red); }
 .tag-warn { border-color: var(--red); color: var(--red); background: #fdf0ee; }
 .tag-office { border-color: var(--muted); color: var(--muted); }
 .tag-new { border-color: var(--amber); color: var(--amber); background: var(--amber-pale); }
 
-/* Timeline */
-.tl-box {
-  border: 1.5px solid var(--amber); background: var(--amber-pale);
-  padding: 20px 24px; margin-top: 20px;
-}
-.tl-box h3 {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-  letter-spacing: .15em; text-transform: uppercase; color: var(--amber); margin-bottom: 14px;
-}
-.tl-row {
-  display: grid; grid-template-columns: 96px 1fr; gap: 10px;
-  font-size: 13px; margin-bottom: 9px; align-items: start;
-}
+.tl-box { border: 1.5px solid var(--amber); background: var(--amber-pale); padding: 20px 24px; margin-top: 20px; }
+.tl-box h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--amber); margin-bottom: 14px; }
+.tl-row { display: grid; grid-template-columns: 96px 1fr; gap: 10px; font-size: 13px; margin-bottom: 9px; align-items: start; }
 .tl-row:last-child { margin-bottom: 0; }
 .tl-when { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--amber); font-weight: 500; padding-top: 2px; }
 .tl-what { line-height: 1.55; color: var(--ink); font-weight: 300; }
 
-/* Contacts */
-.ct-wrap { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.ct-wrap { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 10px; }
 .ct-card { border: 1px solid var(--rule); background: white; padding: 13px 15px; }
 .ct-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
 .ct-detail { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); line-height: 1.8; }
 
-.restart-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  margin-top: 26px; padding: 11px 22px;
-  background: transparent; border: 1.5px solid var(--ink);
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--ink);
-  cursor: pointer; transition: all .2s;
-}
+/* ── Formulare phase ── */
+.form-phase { display: none; animation: fadeUp .3s ease; }
+.form-phase.active { display: block; }
+
+.form-steps { display: flex; gap: 0; margin-bottom: 28px; border: 1.5px solid var(--rule); overflow: hidden; }
+.form-step { flex: 1; padding: 10px 8px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--cream); border-right: 1px solid var(--rule); cursor: pointer; transition: all .2s; }
+.form-step:last-child { border-right: none; }
+.form-step.active { background: var(--ink); color: var(--paper); }
+.form-step.done { background: var(--green); color: white; }
+
+.form-section { display: none; animation: fadeUp .3s ease; }
+.form-section.active { display: block; }
+
+.section-title { font-family: 'Playfair Display', serif; font-size: clamp(18px,3.5vw,24px); font-weight: 700; margin-bottom: 6px; }
+.section-hint { font-size: 13px; color: var(--muted); font-weight: 300; line-height: 1.65; margin-bottom: 24px; }
+
+/* Pre-filled notice */
+.prefilled-notice { background: var(--green-pale); border-left: 3px solid var(--green); padding: 12px 16px; margin-bottom: 22px; font-size: 13px; color: #1a3d28; font-weight: 300; line-height: 1.6; }
+.prefilled-notice strong { font-weight: 600; }
+
+.field-group { margin-bottom: 18px; }
+.field-group label { display: block; font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 5px; font-family: 'IBM Plex Mono', monospace; letter-spacing: .04em; text-transform: uppercase; }
+.field-group .field-hint { font-size: 11.5px; color: var(--muted); margin-bottom: 5px; font-weight: 300; font-style: italic; }
+.field-group input, .field-group select, .field-group textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--rule); background: white; font-family: 'Source Serif 4', serif; font-size: 14px; color: var(--ink); transition: border-color .2s; outline: none; }
+.field-group input:focus, .field-group select:focus, .field-group textarea:focus { border-color: var(--ink); }
+.field-group input.prefilled { background: #f0faf4; border-color: #a8d5b5; }
+.field-group textarea { resize: vertical; min-height: 75px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.check-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.check-item { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.check-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--ink); }
+.check-item span { font-size: 13.5px; }
+
+.nav-row { display: flex; gap: 12px; margin-top: 28px; align-items: center; flex-wrap: wrap; }
+.btn-primary { padding: 12px 28px; background: var(--ink); color: var(--paper); border: none; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+.btn-primary:hover { background: #333; }
+.btn-secondary { padding: 12px 20px; background: transparent; color: var(--muted); border: 1.5px solid var(--rule); font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+.btn-green { background: var(--green); }
+.btn-green:hover { background: #1e4a30; }
+.btn-amber { background: var(--amber); color: white; border: none; }
+.btn-amber:hover { background: #a66a0a; }
+
+.progress-bar { height: 3px; background: var(--rule); margin-bottom: 28px; }
+.progress-fill { height: 100%; background: var(--amber); transition: width .4s ease; }
+
+.loading { display: none; text-align: center; padding: 36px; }
+.loading.show { display: block; }
+.loading-spinner { width: 28px; height: 28px; border: 2px solid var(--rule); border-top-color: var(--amber); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading p { font-size: 13px; color: var(--muted); font-weight: 300; }
+
+.download-result { background: var(--green-pale); border: 1.5px solid var(--green); padding: 22px 24px; margin-top: 24px; }
+.download-result h3 { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--green); margin-bottom: 8px; }
+.download-result p { font-size: 13px; line-height: 1.7; color: #1e3d28; font-weight: 300; margin-bottom: 16px; }
+.download-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.download-card { border: 1.5px solid var(--ink); background: white; padding: 16px; cursor: pointer; transition: all .2s; text-align: left; }
+.download-card:hover { background: var(--ink); color: var(--paper); transform: translateY(-2px); }
+.download-card:hover .dc-sub { color: rgba(244,239,228,.6); }
+.dc-icon { font-size: 22px; margin-bottom: 6px; display: block; }
+.dc-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+.dc-sub { font-size: 11px; color: var(--muted); font-weight: 300; }
+
+.restart-btn { display: inline-flex; align-items: center; gap: 7px; margin-top: 24px; padding: 11px 22px; background: transparent; border: 1.5px solid var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); cursor: pointer; transition: all .2s; }
 .restart-btn:hover { background: var(--ink); color: var(--paper); }
 
 @media (max-width: 480px) {
-  .opts.two { grid-template-columns: 1fr; }
+  .opts.two, .field-row, .field-row-3 { grid-template-columns: 1fr; }
+  .download-grid { grid-template-columns: 1fr; }
+  .form-steps { flex-wrap: wrap; }
+  .form-step { flex: 0 0 50%; border-bottom: 1px solid var(--rule); }
   .tl-row { grid-template-columns: 1fr; gap: 2px; }
-  .mappe-grid { grid-template-columns: 1fr 1fr; }
   .main { padding: 24px 16px 80px; }
+  .formulare-cta { flex-direction: column; }
 }
 </style>
 </head>
@@ -279,275 +224,404 @@ body {
     <div class="header-badge">Stuttgart — Stand Juni 2026</div>
     <div class="header-title">Ihr digitaler<br><em>Veranstaltungsberater</em></div>
     <div class="header-sub">Schritt für Schritt zur richtigen Genehmigung</div>
-    <div style="margin-top:14px;font-size:13px;color:rgba(244,239,228,.6);font-weight:300;line-height:1.7;max-width:480px;">
-      Beantworten Sie wenige Fragen. Wir zeigen Ihnen anschließend, welche Genehmigungen, Unterlagen und Fristen für Ihre Veranstaltung relevant sind.
+    <div class="header-desc">Beantworten Sie wenige Fragen. Wir zeigen Ihnen anschließend, welche Genehmigungen, Unterlagen und Fristen für Ihre Veranstaltung relevant sind.</div>
+  </div>
+  <div class="phase-bar">
+    <div class="phase-inner">
+      <div class="phase-tab active" id="phaseTab1">① Beratung</div>
+      <div class="phase-tab" id="phaseTab2">② Formulare ausfüllen</div>
+      <div class="phase-tab" id="phaseTab3">③ Download</div>
     </div>
   </div>
 </header>
 
 <div class="main">
 
-  <div class="prog-wrap" id="progWrap">
-    <div class="p-dot active" id="pd1"></div><div class="p-line" id="pl1"></div>
-    <div class="p-dot" id="pd2"></div><div class="p-line" id="pl2"></div>
-    <div class="p-dot" id="pd3"></div><div class="p-line" id="pl3"></div>
-    <div class="p-dot" id="pd4"></div><div class="p-line" id="pl4"></div>
-    <div class="p-dot" id="pd5"></div><div class="p-line" id="pl5"></div>
-    <div class="p-dot" id="pd6"></div>
-    <span class="p-label" id="pLabel">Schritt 1 von 6</span>
-  </div>
+  <!-- ═══════════════════════════════════════
+       PHASE 1 — WIZARD
+  ══════════════════════════════════════════ -->
+  <div id="phase1">
 
-  <!-- Sofort-Feedback -->
-  <div class="sofort" id="sofort">
-    <div class="s-label">Was das bedeutet</div>
-    <div class="s-rows" id="sofortRows"></div>
-  </div>
-
-  <!-- Q1: Ort -->
-  <div class="q-card active" id="q1">
-    <div class="q-step">Schritt 01 / 06 — Veranstaltungsort</div>
-    <div class="q-text">Wo findet Ihre Veranstaltung statt?</div>
-    <div class="q-hint">Wählen Sie die Fläche, die am besten passt. Davon hängt ab, welche Genehmigungen und Unterlagen Sie benötigen.</div>
-    <div class="opts two">
-      <button class="opt" onclick="pick(1,'strasse')">
-        <span class="o-icon">🛣️</span>
-        <div><div class="o-label">Straße oder Gehweg</div><div class="o-sub">Gesperrte Fahrbahn, Bürgersteig</div></div>
-      </button>
-      <button class="opt" onclick="pick(1,'platz')">
-        <span class="o-icon">🏙️</span>
-        <div><div class="o-label">Öffentlicher Platz</div><div class="o-sub">Marktplatz, Schlossplatz, Park</div></div>
-      </button>
-      <button class="opt" onclick="pick(1,'parkplatz')">
-        <span class="o-icon">🅿️</span>
-        <div><div class="o-label">Parkplatz</div><div class="o-sub">Supermarkt, Schule, öffentlich</div></div>
-      </button>
-      <button class="opt" onclick="pick(1,'privat')">
-        <span class="o-icon">🏠</span>
-        <div><div class="o-label">Privatgelände</div><div class="o-sub">Vereinsheim, Kirchhof, Hof</div></div>
-      </button>
-      <button class="opt unsure" onclick="pick(1,'unsure')" style="grid-column:1/-1">
-        <span class="o-icon">❓</span>
-        <div><div class="o-label">Ich bin nicht sicher</div><div class="o-sub">Kein Problem — wir helfen Ihnen weiter</div></div>
-      </button>
+    <div class="prog-wrap" id="progWrap">
+      <div class="p-dot active" id="pd1"></div><div class="p-line" id="pl1"></div>
+      <div class="p-dot" id="pd2"></div><div class="p-line" id="pl2"></div>
+      <div class="p-dot" id="pd3"></div><div class="p-line" id="pl3"></div>
+      <div class="p-dot" id="pd4"></div><div class="p-line" id="pl4"></div>
+      <div class="p-dot" id="pd5"></div><div class="p-line" id="pl5"></div>
+      <div class="p-dot" id="pd6"></div>
+      <span class="p-label" id="pLabel">Schritt 1 von 6</span>
     </div>
-  </div>
 
-  <!-- Q1 dead ends -->
-  <div class="q-card" id="q1privat">
-    <button class="back-btn" onclick="go('q1')">← Zurück</button>
-    <div class="dead-end">
-      <h3>Privatgelände — gute Nachricht</h3>
-      <p>Für Veranstaltungen auf rein privatem Gelände ist in der Regel <strong>keine Genehmigung nach §29 StVO</strong> erforderlich.<br><br>
-      Es gelten jedoch Regeln für <strong>Lärm</strong> (Nachtruhe ab 22 Uhr), <strong>Lebensmittelhygiene</strong> und <strong>Jugendschutz</strong>. Bei größeren Veranstaltungen empfiehlt sich ein kurzes Beratungsgespräch:<br><br>
-      <strong>Amt für öffentliche Ordnung</strong><br>Tel. 0711 216-91131</p>
+    <div class="sofort" id="sofort">
+      <div class="s-label">Was das bedeutet</div>
+      <div id="sofortRows"></div>
     </div>
-    <button class="restart-btn" onclick="restart()">↩ Neu starten</button>
-  </div>
 
-  <div class="q-card" id="q1unsure">
-    <button class="back-btn" onclick="go('q1')">← Zurück</button>
-    <div class="dead-end" style="border-color:var(--muted);background:#f8f5f0;">
-      <h3>Kurze Rückfrage genügt</h3>
-      <p>Rufen Sie kurz beim <strong>Bürgerservice Veranstaltungen</strong> an — in zwei Minuten ist die Frage geklärt.<br><br>
-      <strong>Tel. 0711 216-91131</strong><br>Mo / Mi / Do / Fr, 9–12 Uhr<br><br>
-      Faustregel: Wenn Menschen von außen freien Zutritt zur Fläche haben, gilt sie als öffentlich.</p>
+    <!-- Q1 -->
+    <div class="q-card active" id="q1">
+      <div class="q-step">Schritt 01 / 06 — Veranstaltungsort</div>
+      <div class="q-text">Wo findet Ihre Veranstaltung statt?</div>
+      <div class="q-hint">Davon hängt ab, welche Genehmigungen und Unterlagen Sie benötigen.</div>
+      <div class="opts two">
+        <button class="opt" onclick="pick(1,'strasse')"><span class="o-icon">🛣️</span><div><div class="o-label">Straße oder Gehweg</div><div class="o-sub">Gesperrte Fahrbahn, Bürgersteig</div></div></button>
+        <button class="opt" onclick="pick(1,'platz')"><span class="o-icon">🏙️</span><div><div class="o-label">Öffentlicher Platz</div><div class="o-sub">Marktplatz, Schlossplatz, Park</div></div></button>
+        <button class="opt" onclick="pick(1,'parkplatz')"><span class="o-icon">🅿️</span><div><div class="o-label">Parkplatz</div><div class="o-sub">Supermarkt, Schule, öffentlich</div></div></button>
+        <button class="opt" onclick="pick(1,'privat')"><span class="o-icon">🏠</span><div><div class="o-label">Privatgelände</div><div class="o-sub">Vereinsheim, Kirchhof, Hof</div></div></button>
+        <button class="opt unsure" onclick="pick(1,'unsure')" style="grid-column:1/-1"><span class="o-icon">❓</span><div><div class="o-label">Ich bin nicht sicher</div><div class="o-sub">Kein Problem — wir helfen Ihnen weiter</div></div></button>
+      </div>
     </div>
-    <button class="restart-btn" onclick="restart()">↩ Neu starten</button>
-  </div>
 
-  <!-- Q2: Besucherzahl -->
-  <div class="q-card" id="q2">
-    <button class="back-btn" onclick="go('q1')">← Zurück</button>
-    <div class="q-step">Schritt 02 / 06 — Besucherzahl</div>
-    <div class="q-text">Wie viele Besucher erwarten Sie?</div>
-    <div class="q-hint">Die Besucherzahl bestimmt direkt, welche Sicherheitsanforderungen gelten — z.B. ob ein Sicherheitskonzept oder ein verstärkter Sanitätsdienst nötig wird.</div>
-    <div class="opts">
-      <button class="opt" onclick="pick(2,'klein')">
-        <span class="o-icon">👥</span>
-        <div><div class="o-label">Bis 100 Personen</div><div class="o-sub">Kleines Straßenfest, Vereinsveranstaltung</div></div>
-      </button>
-      <button class="opt" onclick="pick(2,'mittel')">
-        <span class="o-icon">👨‍👩‍👧‍👦</span>
-        <div><div class="o-label">100 bis 500 Personen</div><div class="o-sub">Mittleres Stadtteilfest</div></div>
-      </button>
-      <button class="opt" onclick="pick(2,'gross')">
-        <span class="o-icon">🎪</span>
-        <div><div class="o-label">500 bis 1.000 Personen</div><div class="o-sub">Größeres Fest, Markt</div></div>
-      </button>
-      <button class="opt" onclick="pick(2,'sehr_gross')">
-        <span class="o-icon">🏟️</span>
-        <div><div class="o-label">Mehr als 1.000 Personen</div><div class="o-sub">Großveranstaltung</div></div>
-      </button>
-      <button class="opt unsure" onclick="pick(2,'unsure')">
-        <span class="o-icon">❓</span>
-        <div><div class="o-label">Ich bin nicht sicher</div></div>
-      </button>
+    <div class="q-card" id="q1privat">
+      <button class="back-btn" onclick="goQ('q1')">← Zurück</button>
+      <div class="dead-end">
+        <h3>Privatgelände — gute Nachricht</h3>
+        <p>Für rein private Flächen ist keine Genehmigung nach §29 StVO erforderlich. Dennoch gelten Regeln für Lärm, Lebensmittelhygiene und Jugendschutz.<br><br><strong>Amt für öffentliche Ordnung:</strong> Tel. 0711 216-91131</p>
+      </div>
+      <button class="restart-btn" onclick="restart()">↩ Neu starten</button>
     </div>
-  </div>
 
-  <!-- Q3: Erstmalig -->
-  <div class="q-card" id="q3">
-    <button class="back-btn" onclick="go('q2')">← Zurück</button>
-    <div class="q-step">Schritt 03 / 06 — Erfahrung</div>
-    <div class="q-text">Findet diese Veranstaltung zum ersten Mal statt?</div>
-    <div class="q-hint">Erstmalige Veranstaltungen brauchen mehr Prüfzeit beim Amt — deshalb gilt eine längere Frist.</div>
-    <div class="opts">
-      <button class="opt" onclick="pick(3,'neu')">
-        <span class="o-icon">🆕</span>
-        <div><div class="o-label">Ja — zum ersten Mal</div><div class="o-sub">Diese Veranstaltung wurde noch nie genehmigt</div></div>
-      </button>
-      <button class="opt" onclick="pick(3,'wieder')">
-        <span class="o-icon">🔄</span>
-        <div><div class="o-label">Nein — sie hat schon stattgefunden</div><div class="o-sub">Mindestens einmal bereits genehmigt</div></div>
-      </button>
+    <div class="q-card" id="q1unsure">
+      <button class="back-btn" onclick="goQ('q1')">← Zurück</button>
+      <div class="dead-end" style="border-color:var(--muted);background:#f8f5f0;">
+        <h3>Kurze Rückfrage genügt</h3>
+        <p><strong>Tel. 0711 216-91131</strong><br>Mo / Mi / Do / Fr, 9–12 Uhr<br><br>Faustregel: Wenn Menschen von außen freien Zutritt zur Fläche haben, gilt sie als öffentlich.</p>
+      </div>
+      <button class="restart-btn" onclick="restart()">↩ Neu starten</button>
     </div>
-  </div>
 
-  <!-- Q4: Gastronomie -->
-  <div class="q-card" id="q4">
-    <button class="back-btn" onclick="go('q3')">← Zurück</button>
-    <div class="q-step">Schritt 04 / 06 — Gastronomie</div>
-    <div class="q-text">Werden Speisen oder Getränke angeboten?</div>
-    <div class="q-hint">Das gilt für jeden Stand — auch wenn ein Verein nur Kaffee und Kuchen verkauft. Auch ein einzelner Getränkestand zählt.</div>
-    <div class="opts">
-      <button class="opt" onclick="pick(4,'ja')">
-        <span class="o-icon">🍻</span>
-        <div><div class="o-label">Ja — Essen oder Getränke</div><div class="o-sub">Auch Kaffee, Kuchen, Wasser oder Softdrinks</div></div>
-      </button>
-      <button class="opt" onclick="pick(4,'nein')">
-        <span class="o-icon">—</span>
-        <div><div class="o-label">Nein — keine Gastronomie</div></div>
-      </button>
+    <!-- Q2 -->
+    <div class="q-card" id="q2">
+      <button class="back-btn" onclick="goQ('q1')">← Zurück</button>
+      <div class="q-step">Schritt 02 / 06 — Besucherzahl</div>
+      <div class="q-text">Wie viele Besucher erwarten Sie?</div>
+      <div class="q-hint">Die Besucherzahl bestimmt direkt die Sicherheitsanforderungen.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(2,'klein')"><span class="o-icon">👥</span><div><div class="o-label">Bis 100 Personen</div><div class="o-sub">Kleines Straßenfest, Vereinsveranstaltung</div></div></button>
+        <button class="opt" onclick="pick(2,'mittel')"><span class="o-icon">👨‍👩‍👧‍👦</span><div><div class="o-label">100 bis 500 Personen</div><div class="o-sub">Mittleres Stadtteilfest</div></div></button>
+        <button class="opt" onclick="pick(2,'gross')"><span class="o-icon">🎪</span><div><div class="o-label">500 bis 1.000 Personen</div><div class="o-sub">Größeres Fest, Markt</div></div></button>
+        <button class="opt" onclick="pick(2,'sehr_gross')"><span class="o-icon">🏟️</span><div><div class="o-label">Mehr als 1.000 Personen</div><div class="o-sub">Großveranstaltung</div></div></button>
+        <button class="opt unsure" onclick="pick(2,'unsure')"><span class="o-icon">❓</span><div><div class="o-label">Ich bin nicht sicher</div></div></button>
+      </div>
     </div>
-  </div>
 
-  <!-- Q5: Bühne/Musik -->
-  <div class="q-card" id="q5">
-    <button class="back-btn" onclick="go('q4')">← Zurück</button>
-    <div class="q-step">Schritt 05 / 06 — Aufbauten & Programm</div>
-    <div class="q-text">Gibt es Musik, eine Bühne oder andere Aufbauten?</div>
-    <div class="q-hint">Zelte, Bühnen und Hüpfburgen heißen offiziell „Fliegende Bauten" und brauchen ein amtliches Prüfbuch. Musik beeinflusst die Lärmschutzauflagen.</div>
-    <div class="opts two">
-      <button class="opt" onclick="pick(5,'buehne')">
-        <span class="o-icon">🎭</span>
-        <div><div class="o-label">Bühne oder Zelt</div><div class="o-sub">Pavillon, Festzelt, Aufführungsfläche</div></div>
-      </button>
-      <button class="opt" onclick="pick(5,'musik')">
-        <span class="o-icon">🎵</span>
-        <div><div class="o-label">Nur Musik (ohne Bühne)</div><div class="o-sub">Lautsprecher, DJ, Liveband im Freien</div></div>
-      </button>
-      <button class="opt" onclick="pick(5,'huepfburg')">
-        <span class="o-icon">🎡</span>
-        <div><div class="o-label">Hüpfburg oder Fahrgeschäft</div></div>
-      </button>
-      <button class="opt" onclick="pick(5,'nein')">
-        <span class="o-icon">—</span>
-        <div><div class="o-label">Nichts davon</div><div class="o-sub">Nur Tische, Stände, Garnituren</div></div>
-      </button>
+    <!-- Q3 -->
+    <div class="q-card" id="q3">
+      <button class="back-btn" onclick="goQ('q2')">← Zurück</button>
+      <div class="q-step">Schritt 03 / 06 — Erfahrung</div>
+      <div class="q-text">Findet diese Veranstaltung zum ersten Mal statt?</div>
+      <div class="q-hint">Erstmalige Veranstaltungen brauchen mehr Prüfzeit — deshalb gilt eine längere Frist.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(3,'neu')"><span class="o-icon">🆕</span><div><div class="o-label">Ja — zum ersten Mal</div><div class="o-sub">Noch nie genehmigt</div></div></button>
+        <button class="opt" onclick="pick(3,'wieder')"><span class="o-icon">🔄</span><div><div class="o-label">Nein — sie hat schon stattgefunden</div><div class="o-sub">Mindestens einmal bereits genehmigt</div></div></button>
+      </div>
     </div>
-  </div>
 
-  <!-- Q6: Verkehr -->
-  <div class="q-card" id="q6">
-    <button class="back-btn" onclick="go('q5')">← Zurück</button>
-    <div class="q-step">Schritt 06 / 06 — Verkehr</div>
-    <div class="q-text">Muss der Straßenverkehr eingeschränkt werden?</div>
-    <div class="q-hint">Z.B. wenn Sie eine Straße sperren, ein Halteverbot einrichten oder Umleitungen brauchen.</div>
-    <div class="opts">
-      <button class="opt" onclick="pick(6,'ja')">
-        <span class="o-icon">🚧</span>
-        <div><div class="o-label">Ja — Sperrung, Halteverbot oder Umleitung</div></div>
-      </button>
-      <button class="opt" onclick="pick(6,'nein')">
-        <span class="o-icon">—</span>
-        <div><div class="o-label">Nein — kein Eingriff in den Verkehr</div></div>
-      </button>
+    <!-- Q4 -->
+    <div class="q-card" id="q4">
+      <button class="back-btn" onclick="goQ('q3')">← Zurück</button>
+      <div class="q-step">Schritt 04 / 06 — Gastronomie</div>
+      <div class="q-text">Werden Speisen oder Getränke angeboten?</div>
+      <div class="q-hint">Auch Kaffee und Kuchen eines Vereinsstands zählt.</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(4,'ja')"><span class="o-icon">🍻</span><div><div class="o-label">Ja — Essen oder Getränke</div></div></button>
+        <button class="opt" onclick="pick(4,'nein')"><span class="o-icon">—</span><div><div class="o-label">Nein — keine Gastronomie</div></div></button>
+      </div>
     </div>
-  </div>
 
-  <!-- Result -->
-  <div class="result-wrap" id="resultWrap">
+    <!-- Q5 -->
+    <div class="q-card" id="q5">
+      <button class="back-btn" onclick="goQ('q4')">← Zurück</button>
+      <div class="q-step">Schritt 05 / 06 — Aufbauten & Programm</div>
+      <div class="q-text">Gibt es Musik, eine Bühne oder andere Aufbauten?</div>
+      <div class="q-hint">Zelte, Bühnen und Hüpfburgen brauchen ein amtliches Prüfbuch.</div>
+      <div class="opts two">
+        <button class="opt" onclick="pick(5,'buehne')"><span class="o-icon">🎭</span><div><div class="o-label">Bühne oder Zelt</div></div></button>
+        <button class="opt" onclick="pick(5,'musik')"><span class="o-icon">🎵</span><div><div class="o-label">Nur Musik</div><div class="o-sub">DJ, Liveband, Lautsprecher</div></div></button>
+        <button class="opt" onclick="pick(5,'huepfburg')"><span class="o-icon">🎡</span><div><div class="o-label">Hüpfburg / Fahrgeschäft</div></div></button>
+        <button class="opt" onclick="pick(5,'nein')"><span class="o-icon">—</span><div><div class="o-label">Nichts davon</div></div></button>
+      </div>
+    </div>
 
-    <!-- Veranstaltungsmappe -->
-    <div class="mappe" id="mappe"></div>
+    <!-- Q6 -->
+    <div class="q-card" id="q6">
+      <button class="back-btn" onclick="goQ('q5')">← Zurück</button>
+      <div class="q-step">Schritt 06 / 06 — Verkehr</div>
+      <div class="q-text">Muss der Straßenverkehr eingeschränkt werden?</div>
+      <div class="q-hint">Sperrung, Halteverbot oder Umleitung nötig?</div>
+      <div class="opts">
+        <button class="opt" onclick="pick(6,'ja')"><span class="o-icon">🚧</span><div><div class="o-label">Ja — Sperrung oder Halteverbot</div></div></button>
+        <button class="opt" onclick="pick(6,'nein')"><span class="o-icon">—</span><div><div class="o-label">Nein — kein Eingriff in den Verkehr</div></div></button>
+      </div>
+    </div>
 
-    <!-- Checklist -->
-    <div class="cl-body" id="clBody"></div>
+    <!-- Result / Checkliste -->
+    <div class="result-wrap" id="resultWrap">
+      <div class="mappe" id="mappe"></div>
 
-    <!-- Timeline -->
-    <div class="tl-box" id="tlBox"></div>
+      <!-- CTA zu Formularen -->
+      <div class="formulare-cta">
+        <div class="cta-text">
+          <h3>Formulare automatisch ausfüllen</h3>
+          <p>Wir übernehmen Ihre Angaben direkt — kein doppeltes Eintippen. Beide amtlichen PDF-Formulare werden fertig ausgefüllt.</p>
+        </div>
+        <button class="cta-btn" onclick="goToFormulare()">Formulare ausfüllen →</button>
+      </div>
 
-    <!-- Contacts -->
-    <div id="ctWrap"></div>
+      <div class="cl-body" id="clBody"></div>
+      <div class="tl-box" id="tlBox"></div>
+      <div id="ctWrap"></div>
+      <button class="restart-btn" onclick="restart()">↩ Neue Veranstaltung planen</button>
+    </div>
 
-    <button class="restart-btn" onclick="restart()">↩ Neue Veranstaltung planen</button>
-  </div>
+  </div><!-- /phase1 -->
 
-</div>
+  <!-- ═══════════════════════════════════════
+       PHASE 2 — FORMULARE
+  ══════════════════════════════════════════ -->
+  <div id="phase2" style="display:none;">
+
+    <div class="form-steps">
+      <div class="form-step active" id="ftab1" onclick="goFormStep(1)">① Veranstalter</div>
+      <div class="form-step" id="ftab2" onclick="goFormStep(2)">② Veranstaltung</div>
+      <div class="form-step" id="ftab3" onclick="goFormStep(3)">③ Ort & Aufbauten</div>
+      <div class="form-step" id="ftab4" onclick="goFormStep(4)">④ Download</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="formProgress" style="width:25%"></div></div>
+
+    <!-- Form 1: Veranstalter -->
+    <div class="form-section active" id="fsec1">
+      <div class="section-title">Wer veranstaltet?</div>
+      <div class="prefilled-notice" id="prefilledNotice1" style="display:none">
+        <strong>✓ Aus Ihrer Eingabe übernommen.</strong> Bitte prüfen und ergänzen Sie die Felder.
+      </div>
+      <div class="section-hint">Diese Angaben erscheinen auf beiden amtlichen Formularen.</div>
+
+      <div class="field-group">
+        <label>Name der Veranstaltung</label>
+        <input type="text" id="f_veranstaltungsname" placeholder="z.B. Stuttgarter Sommerfest 2026">
+      </div>
+      <div class="field-group">
+        <label>Institution / Verein / Organisation</label>
+        <input type="text" id="f_institution" placeholder="z.B. Bürgerverein Mitte Stuttgart e.V.">
+      </div>
+      <div class="field-group">
+        <label>Anschrift</label>
+        <input type="text" id="f_anschrift" placeholder="Straße, Hausnummer, PLZ, Ort">
+      </div>
+      <div class="field-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:13.5px;">
+          <input type="checkbox" id="f_gemeinnuetzig" style="width:16px;height:16px;accent-color:var(--ink)">
+          Organisation ist gemeinnützig
+        </label>
+      </div>
+      <div class="field-group">
+        <label>Ansprechperson (Zuname, Vorname)</label>
+        <input type="text" id="f_ansprech_name" placeholder="z.B. Mustermann, Max">
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>Telefon</label><input type="tel" id="f_ansprech_tel" placeholder="0711 ..."></div>
+        <div class="field-group"><label>Mobiltelefon</label><input type="tel" id="f_ansprech_mobil" placeholder="0170 ..."></div>
+      </div>
+      <div class="field-group"><label>E-Mail</label><input type="email" id="f_ansprech_email" placeholder="name@organisation.de"></div>
+
+      <div class="nav-row">
+        <button class="btn-secondary" onclick="backToChecklist()">← Zur Checkliste</button>
+        <button class="btn-primary" onclick="goFormStep(2)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- Form 2: Veranstaltung -->
+    <div class="form-section" id="fsec2">
+      <div class="section-title">Wann findet es statt?</div>
+      <div class="prefilled-notice" id="prefilledNotice2" style="display:none">
+        <strong>✓ Aus Ihrer Eingabe übernommen.</strong> Bitte prüfen und ergänzen Sie die Felder.
+      </div>
+      <div class="section-hint">Geben Sie alle Zeiträume an — auch Auf- und Abbau.</div>
+
+      <div style="background:var(--amber-pale);border-left:3px solid var(--amber);padding:10px 14px;margin-bottom:20px;font-size:13px;color:#5a4020;font-weight:300;line-height:1.6;">
+        <strong>Nachtruhe:</strong> 22:00–06:00 Uhr · Musik muss davor enden · Sonntags kein Aufbau 9–11 Uhr
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label>Aufbau — Datum</label><input type="text" id="f_aufbau_datum" placeholder="TT.MM.JJJJ"></div>
+        <div class="field-group"><label>Aufbau — Uhrzeit</label><input type="text" id="f_aufbau_uhrzeit" placeholder="08:00 - 18:00"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>Veranstaltung — Datum</label><input type="text" id="f_veranstaltung_datum" placeholder="TT.MM.JJJJ"></div>
+        <div class="field-group"><label>Veranstaltung — Uhrzeit</label><input type="text" id="f_veranstaltung_uhrzeit" placeholder="12:00 - 22:00"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>Musikdarbietungen</label><div class="field-hint">Von - bis (vor 22:00!)</div><input type="text" id="f_musik_uhrzeit" placeholder="14:00 - 21:30"></div>
+        <div class="field-group"><label>Ende Ausschank</label><input type="text" id="f_ausschank_ende" placeholder="21:30"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>Abbau — Datum</label><input type="text" id="f_abbau_datum" placeholder="TT.MM.JJJJ"></div>
+        <div class="field-group"><label>Abbau — Uhrzeit</label><input type="text" id="f_abbau_uhrzeit" placeholder="09:00 - 14:00"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>Besucher gleichzeitig</label><input type="number" id="f_besucher_gleich" placeholder="z.B. 300"></div>
+        <div class="field-group"><label>Besucher gesamt</label><input type="number" id="f_besucher_gesamt" placeholder="z.B. 800"></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-secondary" onclick="goFormStep(1)">← Zurück</button>
+        <button class="btn-primary" onclick="goFormStep(3)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- Form 3: Ort & Aufbauten -->
+    <div class="form-section" id="fsec3">
+      <div class="section-title">Wo und was?</div>
+      <div class="prefilled-notice" id="prefilledNotice3" style="display:none">
+        <strong>✓ Aus Ihrer Eingabe übernommen.</strong> Checkboxen wurden automatisch gesetzt.
+      </div>
+      <div class="section-hint">Diese Angaben bestimmen die Checkboxen im amtlichen Formular.</div>
+
+      <div class="field-group">
+        <label>Beschreibung des Veranstaltungsorts</label>
+        <div class="field-hint">Stadtteil, Straße, Platzbezeichnung</div>
+        <textarea id="f_ort_beschreibung" placeholder="z.B. Marktplatz Stuttgart-Mitte, zwischen Rathaus und Markthalle"></textarea>
+      </div>
+      <div class="field-group">
+        <label>Art der Verkehrsfläche</label>
+        <select id="f_ort_typ">
+          <option value="strasse">Straßenfläche</option>
+          <option value="gehweg">Gehwegfläche</option>
+          <option value="fussgaenger">Fußgängerzone</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Aufbauten auf der Fläche</label>
+        <div class="check-group">
+          <label class="check-item"><input type="checkbox" id="fa_garn"><span>Garnituren</span></label>
+          <label class="check-item"><input type="checkbox" id="fa_verk"><span>Verkaufsstände</span></label>
+          <label class="check-item"><input type="checkbox" id="fa_zelt"><span>Zelte / Pavillons</span></label>
+          <label class="check-item"><input type="checkbox" id="fa_buehne"><span>Bühne</span></label>
+          <label class="check-item"><input type="checkbox" id="fa_kar"><span>Karussell / Fahrgeschäft</span></label>
+          <label class="check-item"><input type="checkbox" id="fa_huepf"><span>Hüpfburg</span></label>
+          <label class="check-item"><input type="checkbox" id="fa_spiel"><span>Spielstraße</span></label>
+          <label class="check-item"><input type="checkbox" id="fa_tier"><span>Tiere</span></label>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Flüssiggas</label>
+          <select id="f_fluessiggas"><option value="nein">Nein</option><option value="ja">Ja</option></select>
+        </div>
+        <div class="field-group">
+          <label>Anwohnerbenachrichtigung</label>
+          <select id="f_anwohner"><option value="briefkasten">Briefkasteneinwurf</option><option value="tagespresse">Tagespresse</option><option value="amtsblatt">Amtsblatt</option></select>
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-secondary" onclick="goFormStep(2)">← Zurück</button>
+        <button class="btn-primary" onclick="goFormStep(4)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- Form 4: Download -->
+    <div class="form-section" id="fsec4">
+      <div class="section-title">Formulare erstellen</div>
+      <div class="section-hint">Noch das Datum, dann werden beide Formulare fertig ausgefüllt.</div>
+
+      <div class="field-row">
+        <div class="field-group"><label>Datum der Unterschrift</label><input type="text" id="f_datum" placeholder="TT.MM.JJJJ"></div>
+        <div class="field-group"><label>Stadt</label><input type="text" id="f_stadt" value="Stuttgart" placeholder="Stuttgart"></div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-secondary" onclick="goFormStep(3)">← Zurück</button>
+        <button class="btn-primary btn-amber" onclick="generatePDFs()">📄 Formulare erstellen</button>
+      </div>
+
+      <div class="loading" id="loadingDiv">
+        <div class="loading-spinner"></div>
+        <p>Formulare werden ausgefüllt…</p>
+      </div>
+
+      <div class="download-result" id="downloadResult" style="display:none;">
+        <h3>✓ Ihre Formulare sind fertig</h3>
+        <p>Beide amtlichen Formulare wurden ausgefüllt. Herunterladen, unterschreiben und beim <strong>Bürgerservice Veranstaltungen</strong> einreichen (Eberhardstr. 35).</p>
+        <div class="download-grid">
+          <div class="download-card" id="dlAntrag"><span class="dc-icon">📋</span><div class="dc-name">Antrag §29 StVO</div><div class="dc-sub">Antrag_Verkehrsflaeche.pdf</div></div>
+          <div class="download-card" id="dlErklaerung"><span class="dc-icon">📄</span><div class="dc-name">Veranstaltererklärung</div><div class="dc-sub">Veranstalterererklaerung.pdf</div></div>
+        </div>
+        <div style="margin-top:14px;padding:12px 14px;background:var(--amber-pale);border:1px solid var(--amber);font-size:12px;color:#5a4020;line-height:1.6;">
+          <strong>Nächste Schritte:</strong> Ausdrucken → Unterschreiben → Belegungsplan 1:500 beifügen → Einreichen
+        </div>
+      </div>
+
+      <button class="restart-btn" style="margin-top:20px;" onclick="restart()">↩ Neue Veranstaltung planen</button>
+    </div>
+
+  </div><!-- /phase2 -->
+
+</div><!-- /main -->
 
 <script>
-const A = {};
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const W = {}; // wizard answers
+let pdfBlobs = {};
 
-// ── Sofort-Feedback content ──
+// ═══════════════════════════════════════
+// SOFORT-FEEDBACK
+// ═══════════════════════════════════════
 const SF = {
-  // Q1
-  strasse:   [['§29 StVO erforderlich', 'Ihre Veranstaltung auf einer Straße benötigt eine Erlaubnis der Stadt Stuttgart.'], ['Zuständig', 'Bürgerservice Veranstaltungen — wir zeigen Ihnen alle Unterlagen.']],
-  platz:     [['§29 StVO erforderlich', 'Öffentliche Plätze sind genehmigungspflichtig.'], ['Koordination', 'Das Amt hört Polizei, Feuerwehr und Tiefbauamt an — das dauert.']],
-  parkplatz: [['Gilt als öffentlich', 'Parkplätze mit freiem Zutritt gelten nach StVO als öffentliche Fläche.'], ['§29 StVO erforderlich', 'Gleiche Genehmigung wie für Straßen.']],
-  // Q2
-  klein:     [['Keine zusätzlichen Sicherheitsanforderungen erwartet', 'Bis 100 Personen sind die Auflagen überschaubar.'], ['Sanitätsdienst empfohlen', 'Auch bei kleinen Festen ist ein Sanitätsdienst vor Ort sinnvoll.']],
-  mittel:    [['Sanitätsdienst erforderlich', 'Ab dieser Größe ist ein organisierter Sanitätsdienst Pflicht.'], ['Rettungswege im Plan', 'Der Belegungsplan muss ausreichende Rettungswege zeigen.']],
-  gross:     [['<strong>Sicherheitsüberprüfung wahrscheinlich</strong>', 'Ab ca. 500 Personen prüft das Amt besondere Sicherheitsauflagen.'], ['Verstärkter Sanitätsdienst', 'Mehr Personal und ggf. Fahrzeuge erforderlich.']],
-  sehr_gross:[['<strong>Sicherheitskonzept erforderlich</strong>', 'Großveranstaltungen ab 1.000+ Personen benötigen ein schriftliches Sicherheitskonzept.'], ['Frühzeitig beginnen', 'Planen Sie mind. 6 Monate im Voraus — Behörden brauchen mehr Abstimmungszeit.']],
-  // Q3
-  neu:       [['Frist: <strong>12 Wochen</strong>', 'Erstmalige Veranstaltungen brauchen diese Vorlaufzeit zur Prüfung.'], ['Tipp', 'Beginnen Sie heute mit dem Belegungsplan — er kostet am meisten Zeit.']],
-  wieder:    [['Frist: <strong>8 Wochen</strong>', 'Für bekannte Veranstaltungen genügt diese kürzere Frist.']],
-  // Q4
-  gastro_ja: [['Neues Recht seit 2022', 'Die Gestattung nach §12 GastG gilt nicht mehr. Es gilt jetzt §2 LGastG BW.'], ['Jeder Stand einzeln', 'Jeder Standbetreiber muss separat angezeigt werden — auch Vereinsstände.'], ['Reisegewerbekarte', 'Alle Standbetreiber brauchen eine Reisegewerbekarte.']],
-  // Q5
-  buehne:    [['Fliegender Bau', 'Bühnen und Zelte brauchen ein amtliches Prüfbuch — ähnlich wie ein TÜV-Nachweis.'], ['Baurechtsamt prüft', 'Ob zusätzlich eine Abnahme vor Ort nötig ist, entscheidet das Baurechtsamt.']],
-  musik:     [['Nachtruhe 22:00 Uhr', 'Musikdarbietungen müssen vor 22:00 Uhr enden.'], ['Lärmauflagen möglich', 'Das Amt kann Auflagen zur Lautstärke erteilen.']],
-  huepfburg: [['Fliegender Bau', 'Hüpfburgen und Fahrgeschäfte benötigen ein gültiges Prüfbuch.']],
-  // Q6
-  verkehr_ja:[['MVAS-Nachweis erforderlich', 'Neu seit 2026: Die verantwortliche Person für Verkehrssicherung braucht einen MVAS-Schulungsnachweis.'], ['Tiefbauamt ist zuständig', 'Für die verkehrsrechtliche Anordnung ist das Tiefbauamt Adressat.']],
+  strasse:    [['§29 StVO erforderlich','Straßen sind öffentliche Verkehrsflächen.'],['Bürgerservice Veranstaltungen','ist zuständig — wir führen Sie durch alle Schritte.']],
+  platz:      [['§29 StVO erforderlich','Öffentliche Plätze sind genehmigungspflichtig.'],['Koordination','Das Amt hört Polizei, Feuerwehr und Tiefbauamt an.']],
+  parkplatz:  [['Gilt als öffentlich','Parkplätze mit freiem Zutritt gelten als öffentliche Fläche.'],['§29 StVO erforderlich','Gleiche Genehmigung wie für Straßen.']],
+  klein:      [['Keine besonderen Sicherheitsauflagen erwartet','Überschaubare Anforderungen bei bis zu 100 Personen.'],['Sanitätsdienst empfohlen','Auch bei kleinen Festen sinnvoll.']],
+  mittel:     [['Sanitätsdienst erforderlich','Ab dieser Größe ist ein organisierter Sanitätsdienst Pflicht.'],['Rettungswege im Plan','Der Belegungsplan muss ausreichende Rettungswege zeigen.']],
+  gross:      [['Sicherheitsüberprüfung wahrscheinlich','Ab ca. 500 Personen prüft das Amt besondere Sicherheitsauflagen.'],['Verstärkter Sanitätsdienst','Mehr Personal und ggf. Fahrzeuge erforderlich.']],
+  sehr_gross: [['Sicherheitskonzept erforderlich','Schriftliches Konzept mit Evakuierung, Ordnerdichte, Notfallplan.'],['Frühzeitig beginnen','Mindestens 6 Monate — Behörden brauchen mehr Zeit.']],
+  neu:        [['Frist: 12 Wochen','Erstmalige Veranstaltungen brauchen diese Vorlaufzeit.'],['Tipp','Beginnen Sie heute mit dem Belegungsplan — er kostet am meisten Zeit.']],
+  wieder:     [['Frist: 8 Wochen','Für bekannte Veranstaltungen genügt diese kürzere Frist.']],
+  gastro_ja:  [['Neues Recht seit 2022','§12 GastG gilt nicht mehr — es gilt §2 LGastG BW.'],['Jeder Stand einzeln','Jeder Standbetreiber muss separat angezeigt werden.'],['Reisegewerbekarte','Alle Standbetreiber brauchen eine Reisegewerbekarte.']],
+  buehne:     [['Fliegender Bau','Bühnen und Zelte brauchen ein amtliches Prüfbuch.'],['Baurechtsamt prüft','Ob eine Abnahme vor Ort nötig ist.']],
+  musik:      [['Nachtruhe 22:00 Uhr','Musikdarbietungen müssen vor 22:00 Uhr enden.']],
+  huepfburg:  [['Fliegender Bau','Hüpfburgen benötigen ein gültiges Prüfbuch.']],
+  verkehr_ja: [['MVAS-Nachweis erforderlich','Neu 2026: Verantwortliche Person braucht MVAS-Schulungsnachweis.'],['Tiefbauamt ist zuständig','Adressat der verkehrsrechtlichen Anordnung.']],
 };
 
 function showSofort(key) {
   const rows = SF[key];
-  if (!rows) { document.getElementById('sofort').classList.remove('show'); return; }
+  if (!rows) { hideSofort(); return; }
   document.getElementById('sofortRows').innerHTML = rows.map(r =>
     `<div class="s-row"><span><strong>${r[0]}</strong> — ${r[1]}</span></div>`
   ).join('');
   document.getElementById('sofort').classList.add('show');
 }
-
 function hideSofort() { document.getElementById('sofort').classList.remove('show'); }
 
+// ═══════════════════════════════════════
+// WIZARD LOGIC
+// ═══════════════════════════════════════
 function pick(step, val) {
-  A[step] = val;
+  W[step] = val;
   setProgress(step);
-
-  // Routing + feedback
   if (step === 1) {
-    if (val === 'privat') { hideSofort(); go('q1privat'); return; }
-    if (val === 'unsure') { hideSofort(); go('q1unsure'); return; }
-    showSofort(val); go('q2');
+    if (val === 'privat') { hideSofort(); goQ('q1privat'); return; }
+    if (val === 'unsure') { hideSofort(); goQ('q1unsure'); return; }
+    showSofort(val); goQ('q2');
   } else if (step === 2) {
-    showSofort(val === 'unsure' ? 'klein' : val); go('q3');
+    showSofort(val === 'unsure' ? 'klein' : val); goQ('q3');
   } else if (step === 3) {
-    showSofort(val === 'neu' ? 'neu' : 'wieder'); go('q4');
+    showSofort(val === 'neu' ? 'neu' : 'wieder'); goQ('q4');
   } else if (step === 4) {
-    if (val === 'ja') showSofort('gastro_ja'); else hideSofort(); go('q5');
+    if (val === 'ja') showSofort('gastro_ja'); else hideSofort(); goQ('q5');
   } else if (step === 5) {
-    const sfKey = val === 'buehne' ? 'buehne' : val === 'musik' ? 'musik' : val === 'huepfburg' ? 'huepfburg' : null;
-    if (sfKey) showSofort(sfKey); else hideSofort(); go('q6');
+    const k = {buehne:'buehne', musik:'musik', huepfburg:'huepfburg'}[val];
+    if (k) showSofort(k); else hideSofort(); goQ('q6');
   } else if (step === 6) {
     if (val === 'ja') showSofort('verkehr_ja'); else hideSofort();
-    setTimeout(() => buildResult(), 700);
+    setTimeout(() => buildChecklist(), 600);
   }
 }
 
-function go(id) {
+function goQ(id) {
   document.querySelectorAll('.q-card,.result-wrap').forEach(c => c.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -555,225 +629,297 @@ function go(id) {
 
 function setProgress(step) {
   for (let i = 1; i <= 6; i++) {
-    document.getElementById('pd' + i).className = i < step ? 'p-dot done' : i === step ? 'p-dot active' : 'p-dot';
-    if (i < 6) document.getElementById('pl' + i).className = i < step ? 'p-line done' : 'p-line';
+    document.getElementById('pd'+i).className = i < step ? 'p-dot done' : i === step ? 'p-dot active' : 'p-dot';
+    if (i < 6) document.getElementById('pl'+i).className = i < step ? 'p-line done' : 'p-line';
   }
-  document.getElementById('pLabel').textContent = step < 6 ? `Schritt ${step + 1} von 6` : 'Ergebnis';
+  document.getElementById('pLabel').textContent = step < 6 ? `Schritt ${step+1} von 6` : 'Ergebnis';
 }
 
-function buildResult() {
+// ═══════════════════════════════════════
+// BUILD CHECKLIST
+// ═══════════════════════════════════════
+function buildChecklist() {
   hideSofort();
-
-  const ort = A[1]; // strasse|platz|parkplatz
-  const besucher = A[2]; // klein|mittel|gross|sehr_gross|unsure
-  const erstmal = A[3] === 'neu';
-  const food = A[4] === 'ja';
-  const aufbau = A[5]; // buehne|musik|huepfburg|nein
-  const traffic = A[6] === 'ja';
-
+  const ort = W[1], besucher = W[2], erstmal = W[3]==='neu';
+  const food = W[4]==='ja', aufbau = W[5], traffic = W[6]==='ja';
   const weeks = erstmal ? 12 : 8;
-  const hasBuilds = aufbau === 'buehne' || aufbau === 'huepfburg';
-  const hasMusik = aufbau === 'musik' || aufbau === 'buehne';
-  const bigEvent = besucher === 'gross' || besucher === 'sehr_gross';
-  const veryBig = besucher === 'sehr_gross';
+  const hasBuilds = aufbau==='buehne'||aufbau==='huepfburg';
+  const hasMusik = aufbau==='musik'||aufbau==='buehne';
+  const bigEvent = besucher==='gross'||besucher==='sehr_gross';
+  const veryBig = besucher==='sehr_gross';
+  const ortLabel = {strasse:'Straße / Gehweg',platz:'Öffentlicher Platz',parkplatz:'Parkplatz'}[ort]||'Öffentliche Fläche';
+  const bLabel = {klein:'bis 100',mittel:'100–500',gross:'500–1.000',sehr_gross:'1.000+',unsure:'unbekannt'}[besucher]||'';
 
-  const ortLabel = { strasse:'Straße / Gehweg', platz:'Öffentlicher Platz', parkplatz:'Parkplatz' }[ort] || 'Öffentliche Fläche';
-  const bLabel = { klein:'bis 100', mittel:'100–500', gross:'500–1.000', sehr_gross:'1.000+', unsure:'unbekannt' }[besucher] || '';
+  // Mappe
+  const checks = ['§29 StVO Antrag','Belegungsplan 1:500','Haftpflichtversicherung',
+    food?'Anzeige LGastG (pro Stand)':null, food?'Reisegewerbekarte':null,
+    hasBuilds?'Prüfbuch Fliegende Bauten':null, traffic?'MVAS-Nachweis':null,
+    traffic?'Verkehrsrechtl. Anordnung':null,
+    bigEvent?'Verstärkter Sanitätsdienst':'Sanitätsdienst',
+    veryBig?'⚠ Sicherheitskonzept':null].filter(Boolean);
 
-  // ── Veranstaltungsmappe ──
-  const mappe = document.getElementById('mappe');
-  const checks = [
-    '§29 StVO Antrag',
-    'Belegungsplan 1:500',
-    'Haftpflichtversicherung',
-    food ? 'Anzeige LGastG (pro Stand)' : null,
-    food ? 'Reisegewerbekarte' : null,
-    hasBuilds ? 'Prüfbuch Fliegende Bauten' : null,
-    traffic ? 'MVAS-Nachweis' : null,
-    traffic ? 'Verkehrsrechtl. Anordnung' : null,
-    bigEvent ? 'Verstärkter Sanitätsdienst' : 'Sanitätsdienst',
-    veryBig ? '⚠ Sicherheitskonzept' : null,
-  ].filter(Boolean);
-
-  mappe.innerHTML = `
+  document.getElementById('mappe').innerHTML = `
     <div class="m-badge">Ihre persönliche Veranstaltungsmappe</div>
-    <h2>${erstmal ? 'Erstveranstaltung' : 'Wiederkehrende Veranstaltung'} — ${ortLabel}</h2>
+    <h2>${erstmal?'Erstveranstaltung':'Wiederkehrende Veranstaltung'} — ${ortLabel}</h2>
     <div class="mappe-grid">
       <div class="mappe-item"><div class="mi-label">Fläche</div><div class="mi-value">${ortLabel}</div></div>
-      <div class="mappe-item"><div class="mi-label">Besucher</div><div class="mi-value ${bigEvent?'warn':''}">${bLabel} Personen${veryBig?' ⚠':''}</div></div>
+      <div class="mappe-item"><div class="mi-label">Besucher</div><div class="mi-value ${bigEvent?'warn':''}">${bLabel}${veryBig?' ⚠':''}</div></div>
       <div class="mappe-item"><div class="mi-label">Antragsfrist</div><div class="mi-value warn">${weeks} Wochen</div></div>
       <div class="mappe-item"><div class="mi-label">Gastronomie</div><div class="mi-value">${food?'Ja — Anzeige nötig':'Keine'}</div></div>
     </div>
-    <div class="mappe-checks">${checks.map(c => `<div class="mappe-check ${c.startsWith('⚠')?'warn':''}">${c.replace('⚠ ','')}</div>`).join('')}</div>
+    <div class="mappe-checks">${checks.map(c=>`<div class="mappe-check ${c.startsWith('⚠')?'warn':''}">${c.replace('⚠ ','')}</div>`).join('')}</div>
   `;
 
-  // ── Checklist ──
-  const cl = document.getElementById('clBody');
-  cl.innerHTML = '';
+  // Checklist items
+  const cl = document.getElementById('clBody'); cl.innerHTML = '';
+  sec(cl,'Pflichtunterlagen — jede öffentliche Veranstaltung');
+  ri(cl,{t:'Antrag auf Überlassung öffentlicher Verkehrsfläche',w:'Das ist der Hauptantrag. Er koordiniert alle Stellen — Polizei, Feuerwehr, Tiefbauamt.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',fm:'Online: service.stuttgart.de oder PDF'});
+  ri(cl,{t:'Veranstaltererklärung §29 StVO',w:'Sie erklären, alle Kosten zu übernehmen — Verkehrszeichen, Reinigung, Schäden.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen'});
+  ri(cl,{t:'Belegungsplan 1:500 (max. DIN A3)',w:'Die Feuerwehr muss prüfen, ob ihre Fahrzeuge durchkommen. Rettungswege mind. 5 m, Abstand zu Gebäuden mind. 2 m.',dl:`${weeks} Wochen vorher`,of:'Stadtmessungsamt (Plangrundlage kostenpflichtig)'});
+  ri(cl,{t:'Veranstaltungshaftpflichtversicherung',w:'Wenn jemand zu Schaden kommt, haften Sie persönlich. Mindest: 250.000 € Personenschäden, 50.000 € Sachschäden.',dl:'Spätestens 2 Wochen vorher',of:'Bürgerservice Veranstaltungen',warn:true});
+  ri(cl,{t:'Veranstaltungsleiter/-in benennen',w:'Diese Person ist die einzige Ansprechperson für Polizei und Feuerwehr während der Veranstaltung.',dl:'Im Antrag angeben',of:'Im Antrag angeben'});
+  if(veryBig) ri(cl,{t:'Sicherheitskonzept (schriftlich)',w:'Ab 1.000+ Personen ist ein schriftliches Konzept mit Evakuierung, Sanitätsdienst und Ordnerdichte erforderlich.',dl:`${weeks} Wochen vorher`,of:'Bürgerservice Veranstaltungen',warn:true});
+  ri(cl,{t:bigEvent?'Verstärkter Sanitätsdienst':'Sanitätsdienst organisieren',w:'Der öffentliche Rettungsdienst (112) reicht nicht aus. Ein eigener Sanitätsdienst muss vor Ort sein.'+(bigEvent?' Bei dieser Größe mehrere Kräfte und ein Fahrzeug nötig.':''),dl:'Rechtzeitig planen',of:'DRK / DLRG / Malteser / Johanniter'});
+  if(food){ sec(cl,'Gastronomie'); ri(cl,{t:'Anzeige §2 LGastG BW — pro Standbetreiber',w:'Achtung: §12 GastG gilt nicht mehr. Jeder Stand muss einzeln angezeigt werden. Sie erhalten keine Bestätigung.',dl:'Mind. 2 Wochen vorher',of:'Gewerbe- und Gaststättenrecht, Schloßstr. 73',isNew:true,fm:'Online: service-bw.de'}); ri(cl,{t:'Reisegewerbekarte für Standbetreiber',w:'Neu: Jeder Standbetreiber braucht eine Reisegewerbekarte — auch Vereinsstände.',dl:'Vor der Veranstaltung',of:'Gewerbe- und Gaststättenrecht',isNew:true}); ri(cl,{t:'Hygiene-Auflagen einhalten',w:'Vor der Eröffnung: Begehung mit Lebensmittelkontrolle. Festes Dach, abwaschbare Böden, Kühlmöglichkeiten, Handwaschgelegenheit.',dl:'Ab Aufbau',of:'Lebensmittelüberwachung'}); }
+  if(hasBuilds){ sec(cl,'Fliegende Bauten'); ri(cl,{t:'Prüfbuch für jeden Fliegenden Bau',w:'Ähnlich wie ein TÜV-Bericht. Ohne gültiges Prüfbuch darf die Anlage nicht aufgestellt werden.',dl:`${weeks} Wochen vorher (mit Antrag)`,of:'Baurechtsamt, Eberhardstr. 33'}); ri(cl,{t:'Rettungswege rund um Aufbauten freihalten',w:'Abstand zu Gebäuden mind. 2 m. Feuerwehrzufahrten dauerhaft zugänglich.',dl:'Gilt ab Aufbau',of:'Branddirektion'}); }
+  if(hasMusik){ sec(cl,'Musik & Lärm'); ri(cl,{t:'Musikzeiten im Antrag angeben',w:'Das Amt prüft Konflikte mit der Nachtruhe. Sonntags keine Lärmaktionen 9–11 Uhr.',dl:'Im Antrag angeben',of:'Bürgerservice Veranstaltungen'}); ri(cl,{t:'Nachtruhe ab 22:00 Uhr',w:'Musik muss vor 22:00 enden. In geschlossenen Zelten bis 23:00 — nur mit Genehmigung.',dl:'Gilt während der Veranstaltung',of:''}); }
+  if(traffic){ sec(cl,'Verkehrsmaßnahmen'); ri(cl,{t:'MVAS-Schulungsnachweis',w:'Neu 2026: Verantwortliche Person für Verkehrssicherung braucht MVAS-Schulungsnachweis.',dl:`${weeks} Wochen vorher`,of:'Tiefbauamt',isNew:true}); ri(cl,{t:'Verkehrsrechtliche Anordnung (§§45, 46 StVO)',w:'Jede Sperrung und jedes Halteverbot muss amtlich angeordnet werden. Fachfirma spart 15% Verwaltungsgebühr.',dl:`${weeks} Wochen vorher`,of:'Tiefbauamt'}); }
 
-  sec(cl, 'Pflichtunterlagen — jede öffentliche Veranstaltung');
-  item(cl, {
-    t:'Antrag auf Überlassung öffentlicher Verkehrsfläche',
-    w:'Das ist der Hauptantrag. Ohne ihn läuft nichts. Er koordiniert alle beteiligten Stellen — Polizei, Feuerwehr, Tiefbauamt. Füllen Sie auch Aufbau- und Abbauzeiten sowie Musikzeiten aus.',
-    dl:`${weeks} Wochen vorher`, of:'Bürgerservice Veranstaltungen', fm:'Online: service.stuttgart.de oder PDF'
-  });
-  item(cl, {
-    t:'Veranstaltererklärung §29 StVO',
-    w:'Sie erklären damit, dass Sie alle Kosten übernehmen, die durch die Veranstaltung entstehen — Verkehrszeichen, Reinigung, Schäden. Wird zusammen mit dem Antrag eingereicht.',
-    dl:`${weeks} Wochen vorher`, of:'Bürgerservice Veranstaltungen'
-  });
-  item(cl, {
-    t:'Belegungsplan im Maßstab 1:500 (max. DIN A3)',
-    w:'Die Feuerwehr muss prüfen, ob ihre Fahrzeuge durchkommen. Ohne Plan kann das Amt nicht entscheiden. Rettungswege mind. 5 m breit, Abstand zu Gebäuden mind. 2 m. Plangrundlage: maps.stuttgart.de',
-    dl:`${weeks} Wochen vorher`, of:'Stadtmessungsamt (Plangrundlage kostenpflichtig)'
-  });
-  item(cl, {
-    t:'Veranstaltungshaftpflichtversicherung',
-    w:'Wenn bei Ihrer Veranstaltung jemand zu Schaden kommt, haften Sie als Veranstalter persönlich. Diese Versicherung schützt Sie. Mindest: 250.000 € Personenschäden, 50.000 € Sachschäden.',
-    dl:'Spätestens 2 Wochen vorher ⚠', of:'Bürgerservice Veranstaltungen', warn:true
-  });
-  item(cl, {
-    t:'Veranstaltungsleiter/-in benennen',
-    w:'Diese Person ist während der gesamten Veranstaltung vor Ort — einzige Ansprechperson für Polizei und Feuerwehr. Verantwortlich, wenn etwas schiefläuft.',
-    dl:'Im Antrag angeben', of:'Im Antrag angeben'
-  });
-
-  // Sanitätsdienst
-  if (veryBig) {
-    item(cl, {
-      t:'Sicherheitskonzept (schriftlich)',
-      w:'Bei sehr großen Veranstaltungen (1.000+ Personen) verlangt das Amt ein schriftliches Sicherheitskonzept. Darin beschreiben Sie Evakuierungswege, Sanitätsdienst, Ordnerdichte und Notfallpläne.',
-      dl:`${weeks} Wochen vorher`, of:'Bürgerservice Veranstaltungen', warn:true
-    });
-  }
-  item(cl, {
-    t: bigEvent ? 'Verstärkter Sanitätsdienst (Personal + Fahrzeuge)' : 'Sanitätsdienst organisieren',
-    w:'Der öffentliche Rettungsdienst (112) ist für Ihre Veranstaltung nicht ausreichend — er kommt nur im Notfall. Ein eigener Sanitätsdienst muss vor Ort präsent sein. ' + (bigEvent ? 'Bei dieser Besucherzahl sind mehrere Kräfte und ein Einsatzfahrzeug nötig.' : ''),
-    dl:'Rechtzeitig planen', of:'DRK / DLRG / Malteser / Johanniter'
-  });
-
-  if (food) {
-    sec(cl, 'Gastronomie');
-    item(cl, {
-      t:'Anzeige nach §2 LGastG BW — pro Standbetreiber',
-      w:'Achtung: Das alte §12 GastG gilt nicht mehr. Nach dem neuen Landesgaststättengesetz BW reicht eine Anzeige — aber jeder Stand muss einzeln angezeigt werden. Sie erhalten keine Bestätigung; die Anzeige selbst genügt.',
-      dl:'Mind. 2 Wochen vorher', of:'Gewerbe- und Gaststättenrecht, Schloßstr. 73', isNew:true, fm:'Online: service-bw.de'
-    });
-    item(cl, {
-      t:'Reisegewerbekarte für jeden Standbetreiber',
-      w:'Neu: Wer im Reisegewerbe Essen oder Getränke verkauft, braucht eine Reisegewerbekarte. Das gilt auch für Vereinsstände. Beantragung bei der Gewerbebehörde am Wohnort des Betreibers.',
-      dl:'Vor der Veranstaltung', of:'Gewerbe- und Gaststättenrecht', isNew:true
-    });
-    item(cl, {
-      t:'Hygiene-Auflagen einhalten (Merkblatt Lebensmittel)',
-      w:'Vor der Eröffnung gibt es eine Begehung — Kontrolleure gehen auch in die Küchen. Pflicht: festes Dach über Austheke, abwaschbare Böden, Kühlmöglichkeiten für verderbliche Lebensmittel, Handwaschgelegenheit.',
-      dl:'Ab Aufbau', of:'Lebensmittelüberwachung (Stichprobenkontrollen)'
-    });
-  }
-
-  if (hasBuilds) {
-    sec(cl, 'Fliegende Bauten');
-    item(cl, {
-      t:'Prüfbuch für jeden Fliegenden Bau',
-      w:'Ein Prüfbuch ist der Nachweis, dass die Konstruktion sicher ist — ähnlich wie ein TÜV-Bericht. Ohne gültiges Prüfbuch darf die Anlage nicht aufgestellt werden. Das Baurechtsamt entscheidet, ob zusätzlich eine Abnahme vor Ort nötig ist.',
-      dl:`${weeks} Wochen vorher (mit Antrag)`, of:'Baurechtsamt, Eberhardstr. 33'
-    });
-    item(cl, {
-      t:'Rettungswege rund um Aufbauten freihalten',
-      w:'Zelte und Bühnen dürfen Rettungswege nicht blockieren. Abstand zu Gebäuden mind. 2 m (Rauchableitung). Feuerwehrzufahrten müssen jederzeit passierbar sein.',
-      dl:'Gilt ab Aufbau', of:'Branddirektion (prüft im Verfahren)'
-    });
-  }
-
-  if (hasMusik) {
-    sec(cl, 'Musik & Lärm');
-    item(cl, {
-      t:'Musikzeiten im Antrag angeben',
-      w:'Geben Sie genau an, wann Musik stattfindet. Das Amt prüft Konflikte mit der Nachtruhe. Sonntags gelten besondere Regeln: keine Lärmaktionen 9–11 Uhr (Hauptgottesdienst).',
-      dl:'Im Antrag angeben', of:'Bürgerservice Veranstaltungen'
-    });
-    item(cl, {
-      t:'Nachtruhe ab 22:00 Uhr beachten',
-      w:'Musikdarbietungen müssen vor 22:00 Uhr enden. Ausnahme in geschlossenen Zelten bis 23:00 Uhr möglich — nur mit ausdrücklicher Genehmigung.',
-      dl:'Gilt während der Veranstaltung', of:''
-    });
-  }
-
-  if (traffic) {
-    sec(cl, 'Verkehrsmaßnahmen');
-    item(cl, {
-      t:'MVAS-Schulungsnachweis (verantwortliche Person)',
-      w:'Neu seit 2026: Die Person, die die Verkehrssicherung verantwortet, muss an einer MVAS-Schulung teilgenommen haben. MVAS = Merkblatt über Rahmenbedingungen für erforderliche Fachkenntnisse zur Verkehrsabsicherung.',
-      dl:`${weeks} Wochen vorher`, of:'Tiefbauamt', isNew:true
-    });
-    item(cl, {
-      t:'Verkehrsrechtliche Anordnung (§§45, 46 StVO)',
-      w:'Jede Sperrung und jedes Halteverbot muss amtlich angeordnet werden. Die Umsetzung (Aufstellen der Schilder) übernehmen Sie oder eine Fachfirma. Tipp: Fachfirma spart 15% Verwaltungsgebühr.',
-      dl:`${weeks} Wochen vorher`, of:'Tiefbauamt (Adressat der Anordnung)'
-    });
-  }
-
-  // ── Timeline ──
+  // Timeline
   const tl = document.getElementById('tlBox');
   const tlRows = [
-    { w:`−${weeks} Wochen`, t:`Antrag + Veranstaltererklärung + Belegungsplan einreichen${hasBuilds?' + Prüfbuch':''}${traffic?' + MVAS-Nachweis':''}` },
-    { w:'−2 Wochen', t:`Haftpflichtversicherungsnachweis einreichen${food?' · Gastronomie-Anzeigen abschicken':''}` },
-    { w:'Vor Aufbau', t:'Rettungswege einzeichnen und freihalten' },
-    { w:'Vor Eröffnung', t:'Begehung mit Polizei, Feuerwehr und Sanitätsdienst — alles wird geprüft' },
-    { w:'Veranstaltung', t:'Nachtruhe ab 22:00 Uhr · Sonntags kein Aufbau 9–11 Uhr · Märkte erst ab 11:00 Uhr' },
+    {w:`−${weeks} Wochen`,t:`Antrag + Veranstaltererklärung + Belegungsplan${hasBuilds?' + Prüfbuch':''}${traffic?' + MVAS-Nachweis':''}`},
+    {w:'−2 Wochen',t:`Haftpflichtversicherung einreichen${food?' · Gastronomie-Anzeigen abschicken':''}`},
+    {w:'Vor Aufbau',t:'Rettungswege markieren und freihalten'},
+    {w:'Vor Eröffnung',t:'Begehung mit Polizei, Feuerwehr und Sanitätsdienst'},
+    {w:'Veranstaltung',t:'Nachtruhe ab 22:00 · Sonntags kein Aufbau 9–11 Uhr'},
   ];
-  tl.innerHTML = '<h3>Ihr Zeitplan</h3>' + tlRows.map(r =>
-    `<div class="tl-row"><div class="tl-when">${r.w}</div><div class="tl-what">${r.t}</div></div>`
-  ).join('');
+  tl.innerHTML = '<h3>Ihr Zeitplan</h3>' + tlRows.map(r=>`<div class="tl-row"><div class="tl-when">${r.w}</div><div class="tl-what">${r.t}</div></div>`).join('');
 
-  // ── Contacts ──
-  const contacts = [
-    { n:'Bürgerservice Veranstaltungen', d:'Tel. 0711 216-91131\nveranstaltungsmanagement@stuttgart.de\nEberhardstr. 35, 70173 Stuttgart\nMo/Mi/Do/Fr 9–12 Uhr, Do auch 14–15:30' },
-  ];
-  if (food) contacts.push({ n:'Gewerbe- und Gaststättenrecht', d:'Tel. 0711 216-98905\ngaststaettenrecht@stuttgart.de\nSchloßstr. 73, 70176 Stuttgart\nMo/Mi/Fr 8:30–12:30, Do 13–18 Uhr' });
-  if (hasBuilds) contacts.push({ n:'Baurechtsamt', d:'Tel. 0711 216-60100\nBSBauen@stuttgart.de\nEberhardstr. 33, 70173 Stuttgart' });
+  // Contacts
+  const contacts = [{n:'Bürgerservice Veranstaltungen',d:'Tel. 0711 216-91131\nveranstaltungsmanagement@stuttgart.de\nEberhardstr. 35, Mo/Mi/Do/Fr 9–12, Do +14–15:30'}];
+  if(food) contacts.push({n:'Gewerbe- und Gaststättenrecht',d:'Tel. 0711 216-98905\ngaststaettenrecht@stuttgart.de\nSchloßstr. 73, Mo/Mi/Fr 8:30–12:30, Do 13–18'});
+  if(hasBuilds) contacts.push({n:'Baurechtsamt',d:'Tel. 0711 216-60100\nBSBauen@stuttgart.de\nEberhardstr. 33'});
+  document.getElementById('ctWrap').innerHTML = '<div style="margin-top:20px;font-family:\'IBM Plex Mono\',monospace;font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Kontakte</div><div class="ct-wrap">'+contacts.map(c=>`<div class="ct-card"><div class="ct-name">${c.n}</div><div class="ct-detail">${c.d.replace(/\n/g,'<br>')}</div></div>`).join('')+'</div>';
 
-  document.getElementById('ctWrap').innerHTML =
-    '<div style="margin-top:20px;font-family:\'IBM Plex Mono\',monospace;font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Kontakte</div>' +
-    '<div class="ct-wrap">' + contacts.map(c =>
-      `<div class="ct-card"><div class="ct-name">${c.n}</div><div class="ct-detail">${c.d.replace(/\n/g,'<br>')}</div></div>`
-    ).join('') + '</div>';
-
-  // progress done
-  for (let i = 1; i <= 6; i++) document.getElementById('pd' + i).className = 'p-dot done';
-  for (let i = 1; i <= 5; i++) document.getElementById('pl' + i).className = 'p-line done';
+  for(let i=1;i<=6;i++) document.getElementById('pd'+i).className='p-dot done';
+  for(let i=1;i<=5;i++) document.getElementById('pl'+i).className='p-line done';
   document.getElementById('pLabel').textContent = 'Fertig ✓';
+  document.getElementById('phaseTab1').classList.add('done');
 
-  go('resultWrap');
+  goQ('resultWrap');
 }
 
-function sec(p, t) {
-  const d = document.createElement('div'); d.className = 'sec-head'; d.textContent = t; p.appendChild(d);
-}
-function item(p, { t, w, dl, of, fm, isNew, warn }) {
-  const d = document.createElement('div'); d.className = 'r-item';
-  d.innerHTML = `
-    <div class="r-check" onclick="this.classList.toggle('done')"></div>
-    <div>
-      <div class="r-title">${t}</div>
-      <div class="r-why">${w}</div>
-      <div class="r-tags">
-        ${dl ? `<span class="tag ${warn?'tag-warn':'tag-dl'}">⏱ ${dl}</span>` : ''}
-        ${of ? `<span class="tag tag-office">${of}</span>` : ''}
-        ${fm ? `<span class="tag tag-office">📄 ${fm}</span>` : ''}
-        ${isNew ? `<span class="tag tag-new">NEU — Recht geändert</span>` : ''}
-      </div>
-    </div>`;
-  p.appendChild(d);
+function sec(p,t){ const d=document.createElement('div'); d.className='sec-head'; d.textContent=t; p.appendChild(d); }
+function ri(p,{t,w,dl,of,fm,isNew,warn}){ const d=document.createElement('div'); d.className='r-item'; d.innerHTML=`<div class="r-check" onclick="this.classList.toggle('done')"></div><div><div class="r-title">${t}</div><div class="r-why">${w}</div><div class="r-tags">${dl?`<span class="tag ${warn?'tag-warn':'tag-dl'}">⏱ ${dl}</span>`:''}${of?`<span class="tag tag-office">${of}</span>`:''}${fm?`<span class="tag tag-office">📄 ${fm}</span>`:''}${isNew?`<span class="tag tag-new">NEU</span>`:''}</div></div>`; p.appendChild(d); }
+
+// ═══════════════════════════════════════
+// TRANSITION TO FORMULARE
+// ═══════════════════════════════════════
+function goToFormulare() {
+  // Pre-fill form fields from wizard answers
+  const besucher = W[2];
+  const bNum = {klein:'50',mittel:'200',gross:'700',sehr_gross:'1500',unsure:''}[besucher]||'';
+
+  // Set besucher
+  if(bNum) {
+    setF('f_besucher_gleich', bNum);
+    setF('f_besucher_gesamt', bNum);
+  }
+
+  // Set Aufbauten from Q5
+  if(W[5]==='buehne') { document.getElementById('fa_buehne').checked=true; document.getElementById('fa_zelt').checked=true; }
+  if(W[5]==='huepfburg') document.getElementById('fa_huepf').checked=true;
+  if(W[5]==='musik') document.getElementById('fa_buehne').checked=false;
+
+  // Set ort_typ
+  const ortMap = {strasse:'strasse',platz:'strasse',parkplatz:'strasse'};
+  if(ortMap[W[1]]) document.getElementById('f_ort_typ').value = ortMap[W[1]];
+
+  // Show prefilled notices if anything was set
+  const anyPrefilled = bNum || W[5] !== undefined;
+  if(anyPrefilled) {
+    ['1','2','3'].forEach(n => {
+      const el = document.getElementById('prefilledNotice'+n);
+      if(el) el.style.display='block';
+    });
+  }
+
+  // Switch to phase 2
+  document.getElementById('phase1').style.display='none';
+  document.getElementById('phase2').style.display='block';
+  document.getElementById('phaseTab1').classList.add('done');
+  document.getElementById('phaseTab2').classList.add('active');
+  goFormStep(1);
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
+function backToChecklist() {
+  document.getElementById('phase2').style.display='none';
+  document.getElementById('phase1').style.display='block';
+  document.getElementById('phaseTab2').classList.remove('active');
+  document.getElementById('resultWrap').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════
+// FORM STEPS
+// ═══════════════════════════════════════
+function goFormStep(n) {
+  document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.form-step').forEach((t,i)=>{
+    t.classList.remove('active','done');
+    if(i+1<n) t.classList.add('done');
+  });
+  document.getElementById('fsec'+n).classList.add('active');
+  document.getElementById('ftab'+n).classList.add('active');
+  document.getElementById('formProgress').style.width=(n*25)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function setF(id,val){ const el=document.getElementById(id); if(el&&val){ el.value=val; el.classList.add('prefilled'); } }
+function gf(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+
+// ═══════════════════════════════════════
+// PDF GENERATION
+// ═══════════════════════════════════════
+async function generatePDFs() {
+  document.getElementById('loadingDiv').classList.add('show');
+  document.getElementById('downloadResult').style.display='none';
+
+  const data = {
+    veranstaltungsname: gf('f_veranstaltungsname'),
+    institution: gf('f_institution'),
+    gemeinnuetzig: document.getElementById('f_gemeinnuetzig').checked,
+    anschrift: gf('f_anschrift'),
+    ansprech_name: gf('f_ansprech_name'),
+    ansprech_tel: gf('f_ansprech_tel'),
+    ansprech_mobil: gf('f_ansprech_mobil'),
+    ansprech_email: gf('f_ansprech_email'),
+    aufbau_datum: gf('f_aufbau_datum'),
+    aufbau_uhrzeit: gf('f_aufbau_uhrzeit'),
+    veranstaltung_datum: gf('f_veranstaltung_datum'),
+    veranstaltung_uhrzeit: gf('f_veranstaltung_uhrzeit'),
+    musik_uhrzeit: gf('f_musik_uhrzeit'),
+    ausschank_ende: gf('f_ausschank_ende'),
+    abbau_datum: gf('f_abbau_datum'),
+    abbau_uhrzeit: gf('f_abbau_uhrzeit'),
+    besucher_gleichzeitig: gf('f_besucher_gleich'),
+    besucher_gesamt: gf('f_besucher_gesamt'),
+    ort_beschreibung: gf('f_ort_beschreibung'),
+    ort_typ: gf('f_ort_typ'),
+    aufbauten: ['garn','verk','zelt','buehne','kar','huepf','spiel','tier'].filter(k=>document.getElementById('fa_'+k).checked).map(k=>({garn:'garnituren',verk:'verkaufsstaende',zelt:'zelte',buehne:'buehne',kar:'karussell',huepf:'huepfburg',spiel:'spielstrasse',tier:'tiere'}[k])),
+    fluessiggas: gf('f_fluessiggas')==='ja',
+    anwohner_benachrichtigung: gf('f_anwohner'),
+    datum_unterschrift: gf('f_datum'),
+    ort_stadt: gf('f_stadt')||'Stuttgart',
+  };
+
+  try {
+    const [antrag, erklaerung] = await Promise.all([fillAntrag(data), fillErklaerung(data)]);
+    pdfBlobs = {antrag, erklaerung};
+    document.getElementById('dlAntrag').onclick = ()=>dl(antrag,'Antrag_Verkehrsflaeche.pdf');
+    document.getElementById('dlErklaerung').onclick = ()=>dl(erklaerung,'Veranstalterererklaerung.pdf');
+    document.getElementById('loadingDiv').classList.remove('show');
+    document.getElementById('downloadResult').style.display='block';
+    document.getElementById('phaseTab2').classList.add('done');
+    document.getElementById('phaseTab3').classList.add('active');
+  } catch(err) {
+    document.getElementById('loadingDiv').classList.remove('show');
+    alert('Fehler: '+err.message);
+  }
+}
+
+async function fillAntrag(data) {
+  const {PDFDocument} = PDFLib;
+  let pdfBytes;
+  try { pdfBytes = await fetch('antrag_source.pdf').then(r=>r.arrayBuffer()); }
+  catch(e) { return makeFallback(data,'Antrag §29 StVO'); }
+
+  const doc = await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
+  const form = doc.getForm();
+  const st=(f,v)=>{try{if(!v&&v!==false)return;const fld=form.getField(f);if(fld.constructor.name==='PDFTextField')fld.setText(String(v));else if(fld.constructor.name==='PDFCheckBox'&&v)fld.check();}catch(e){}};
+  const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
+
+  st('NameVer',data.veranstaltungsname); st('NameInst',data.institution);
+  if(data.gemeinnuetzig) sc('gemüt');
+  st('Anschrift',data.anschrift); st('AnsprNam',data.ansprech_name);
+  st('AnsprTelp',data.ansprech_tel); st('AnsprTelM',data.ansprech_mobil);
+  st('AnsprNamEM',data.ansprech_email); st('VerantNam',data.ansprech_name);
+  st('VerantTelp',data.ansprech_tel); st('VerantwTelM',data.ansprech_mobil);
+  st('AufDat',data.aufbau_datum); st('UhrAuf',data.aufbau_uhrzeit);
+  st('VerDat',data.veranstaltung_datum); st('VerUhrAuf',data.veranstaltung_uhrzeit);
+  st('MusUhr',data.musik_uhrzeit); st('EndAus',data.ausschank_ende);
+  st('AbDat',data.abbau_datum); st('Abuhr',data.abbau_uhrzeit);
+  st('gleichzanw',data.besucher_gleichzeitig); st('gesamtanw',data.besucher_gesamt);
+  st('AngaOrt',data.ort_beschreibung);
+  st('DatUnt',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
+  if(data.ort_typ==='strasse') sc('Strfl');
+  else if(data.ort_typ==='gehweg') sc('Gehw');
+  else if(data.ort_typ==='fussgaenger') sc('Fußg');
+  const cbMap={garnituren:'Garn',verkaufsstaende:'Verk',zelte:'ZelPav',buehne:'Bühne',karussell:'KarFahr',huepfburg:'Hüpf',spielstrasse:'Spiel',tiere:'Tier'};
+  (data.aufbauten||[]).forEach(k=>{if(cbMap[k])sc(cbMap[k]);});
+  if(data.fluessiggas===true) sc('Flüj'); else if(data.fluessiggas===false) sc('Flün');
+  const anwMap={briefkasten:'BenBr',tagespresse:'BenTa',amtsblatt:'BenAm'};
+  if(anwMap[data.anwohner_benachrichtigung]) sc(anwMap[data.anwohner_benachrichtigung]);
+  form.flatten();
+  return new Blob([await doc.save()],{type:'application/pdf'});
+}
+
+async function fillErklaerung(data) {
+  const {PDFDocument} = PDFLib;
+  let pdfBytes;
+  try { pdfBytes = await fetch('erklaerung_source.pdf').then(r=>r.arrayBuffer()); }
+  catch(e) { return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
+
+  const doc = await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
+  const form = doc.getForm();
+  const st=(f,v)=>{try{if(!v)return;form.getTextField(f).setText(String(v));}catch(e){}};
+  const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
+
+  st('BeaInst',data.institution);
+  if(data.gemeinnuetzig) sc('gemeinnützig');
+  st('Anschrift Straße Hausnummer Postleitzahl Ort',data.anschrift);
+  st('Ansprechpartnerin Zuname Vorname',data.ansprech_name);
+  st('Datum und Unterschrift',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
+  form.flatten();
+  return new Blob([await doc.save()],{type:'application/pdf'});
+}
+
+async function makeFallback(data,title) {
+  const {PDFDocument,StandardFonts,rgb}=PDFLib;
+  const doc=await PDFDocument.create();
+  const font=await doc.embedFont(StandardFonts.Helvetica);
+  const page=doc.addPage([595,842]);
+  const h=page.getSize().height;
+  page.drawText(title,{x:50,y:h-60,size:14,font});
+  let y=h-100;
+  [['Veranstaltung',data.veranstaltungsname],['Institution',data.institution],['Anschrift',data.anschrift],['Ansprechperson',data.ansprech_name],['Telefon',data.ansprech_tel],['E-Mail',data.ansprech_email],['Datum',data.veranstaltung_datum+' '+data.veranstaltung_uhrzeit],['Ort',data.ort_beschreibung]].forEach(([l,v])=>{
+    if(!v)return;
+    page.drawText(l+':',{x:50,y,size:9,font,color:rgb(.5,.5,.5)});
+    page.drawText(v,{x:170,y,size:10,font});
+    y-=20;
+  });
+  return new Blob([await doc.save()],{type:'application/pdf'});
+}
+
+function dl(blob,name){ const u=URL.createObjectURL(blob),a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+
+// ═══════════════════════════════════════
+// RESTART
+// ═══════════════════════════════════════
 function restart() {
-  Object.keys(A).forEach(k => delete A[k]);
+  Object.keys(W).forEach(k=>delete W[k]);
   hideSofort();
-  for (let i = 1; i <= 6; i++) document.getElementById('pd' + i).className = i===1?'p-dot active':'p-dot';
-  for (let i = 1; i <= 5; i++) document.getElementById('pl' + i).className = 'p-line';
-  document.getElementById('pLabel').textContent = 'Schritt 1 von 6';
-  go('q1');
+  for(let i=1;i<=6;i++) document.getElementById('pd'+i).className=i===1?'p-dot active':'p-dot';
+  for(let i=1;i<=5;i++) document.getElementById('pl'+i).className='p-line';
+  document.getElementById('pLabel').textContent='Schritt 1 von 6';
+  ['phaseTab1','phaseTab2','phaseTab3'].forEach((id,i)=>{ const el=document.getElementById(id); el.className='phase-tab'+(i===0?' active':''); });
+  document.getElementById('phase2').style.display='none';
+  document.getElementById('phase1').style.display='block';
+  document.querySelectorAll('.q-card,.result-wrap').forEach(c=>c.classList.remove('active'));
+  document.getElementById('q1').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 </script>
 </body>
