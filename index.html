@@ -387,11 +387,11 @@ a.tag-office:hover { text-decoration: underline; }
     <!-- PDF Paket -->
     <div class="pdf-paket-box" id="pdfPaketBox" style="display:none;">
       <div class="pp-label">Vollständiges Paket</div>
-      <h3>Alles auf einen Blick — als PDF</h3>
-      <p>Checkliste, Zeitplan, fehlende Nachweise und ausgefüllte Formulare — zusammengefasst für Ihre Unterlagen und für die Einreichung beim Amt.</p>
+      <h3>Alles auf einen Blick — fertig zum Einreichen</h3>
+      <p>Checkliste, Zeitplan und beide amtlichen Formulare ausgefüllt — alles zusammen als ZIP-Paket.</p>
       <div class="pp-btns">
-        <button class="pp-btn-main" onclick="downloadPaket()">⬇ Vollständiges Paket herunterladen</button>
-        <div class="pp-sub">Enthält: Checkliste · Zeitplan · Fehlende Nachweise · Wichtiger Hinweis</div>
+        <button class="pp-btn-main" onclick="goToFormulare()">Vollständiges Paket erstellen →</button>
+        <div class="pp-sub">Schritt 1: Angaben eingeben · Schritt 2: Download aller Dokumente</div>
       </div>
     </div>
 
@@ -498,14 +498,19 @@ a.tag-office:hover { text-decoration: underline; }
     </div>
     <div class="loading" id="loadingDiv"><div class="loading-spinner"></div><p>Formulare werden ausgefüllt…</p></div>
     <div class="download-result" id="downloadResult" style="display:none;">
-      <h3>✓ Ihre Formulare sind fertig</h3>
-      <p>Beide amtlichen Formulare wurden ausgefüllt. Herunterladen, unterschreiben und beim <strong>Amt für öffentliche Ordnung, Bürgerservice Veranstaltungen</strong> einreichen (Eberhardstr. 35).</p>
+      <h3>✓ Ihr vollständiges Paket ist fertig</h3>
+      <p>Alle Dokumente wurden erstellt. Laden Sie das vollständige Paket herunter, unterschreiben Sie die Formulare und reichen Sie alles beim <strong>Amt für öffentliche Ordnung, Bürgerservice Veranstaltungen</strong> ein.</p>
+      <div style="margin-bottom:12px;">
+        <div class="download-card" id="dlZip" style="border-color:var(--green);margin-bottom:10px;"><span class="dc-icon">📦</span><div class="dc-name">Vollständiges Paket herunterladen (ZIP)</div><div class="dc-sub">Checkliste PDF · Antrag §29 StVO · Veranstaltererklärung</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);font-weight:300;margin-bottom:8px;">Oder einzeln herunterladen:</div>
       <div class="download-grid">
-        <div class="download-card" id="dlAntrag"><span class="dc-icon">⚡</span><div class="dc-name">Antrag §29 StVO herunterladen</div><div class="dc-sub">Antrag_Verkehrsflaeche.pdf</div></div>
-        <div class="download-card" id="dlErklaerung"><span class="dc-icon">⚡</span><div class="dc-name">Veranstaltererklärung herunterladen</div><div class="dc-sub">Veranstaltererklaerung.pdf</div></div>
+        <div class="download-card" id="dlChecklist"><span class="dc-icon">📋</span><div class="dc-name">Checkliste & Zeitplan</div><div class="dc-sub">Veranstaltungsmappe_Stuttgart.pdf</div></div>
+        <div class="download-card" id="dlAntrag"><span class="dc-icon">📄</span><div class="dc-name">Antrag §29 StVO</div><div class="dc-sub">Antrag_Verkehrsflaeche.pdf</div></div>
+        <div class="download-card" id="dlErklaerung"><span class="dc-icon">📄</span><div class="dc-name">Veranstaltererklärung</div><div class="dc-sub">Veranstaltererklaerung.pdf</div></div>
       </div>
       <div style="margin-top:14px;padding:12px 14px;background:var(--amber-pale);border:1px solid var(--amber);font-size:12px;color:#5a4020;line-height:1.6;">
-        <strong>Nächste Schritte:</strong> Ausdrucken → Unterschreiben → Belegungsplan 1:500 beifügen → Einreichen
+        <strong>Nächste Schritte:</strong> Formulare ausdrucken → Unterschreiben → Belegungsplan 1:500 beifügen → Einreichen (Eberhardstr. 35, 70173 Stuttgart)
       </div>
     </div>
     <button class="restart-btn" style="margin-top:20px;" onclick="restart()">↩ Neue Veranstaltung planen</button>
@@ -811,10 +816,20 @@ async function generatePDFs() {
     datum_unterschrift:gf('f_datum'), ort_stadt:gf('f_stadt')||'Stuttgart',
   };
   try {
-    const [antrag, erklaerung] = await Promise.all([fillAntrag(data), fillErklaerung(data)]);
-    pdfBlobs = {antrag, erklaerung};
+    const [antrag, erklaerung, checkliste] = await Promise.all([
+      fillAntrag(data), fillErklaerung(data), buildChecklistePDF()
+    ]);
+    pdfBlobs = {antrag, erklaerung, checkliste};
     document.getElementById('dlAntrag').onclick = ()=>dl(antrag,'Antrag_Verkehrsflaeche.pdf');
     document.getElementById('dlErklaerung').onclick = ()=>dl(erklaerung,'Veranstaltererklaerung.pdf');
+    document.getElementById('dlChecklist').onclick = ()=>dl(checkliste,'Veranstaltungsmappe_Stuttgart.pdf');
+    document.getElementById('dlZip').onclick = async ()=>{
+      const btn = document.getElementById('dlZip');
+      const nm = btn.querySelector('.dc-name');
+      nm.textContent='Wird erstellt...'; btn.style.opacity='0.6';
+      try { await downloadAllAsZip(antrag, erklaerung, checkliste); }
+      finally { nm.textContent='Vollständiges Paket herunterladen (ZIP)'; btn.style.opacity='1'; }
+    };
     document.getElementById('loadingDiv').classList.remove('show');
     document.getElementById('downloadResult').style.display='block';
     document.getElementById('phaseTab2').classList.add('done');
@@ -822,7 +837,174 @@ async function generatePDFs() {
   } catch(err) {
     document.getElementById('loadingDiv').classList.remove('show');
     alert('Fehler: '+err.message);
+    console.error(err);
   }
+}
+
+async function buildChecklistePDF() {
+  const {PDFDocument,rgb} = PDFLib;
+  const doc = await PDFDocument.create();
+  let fontR, fontB;
+  try {
+    const [rB,bB] = await Promise.all([
+      fetch('NotoSans-Regular.ttf').then(r=>r.arrayBuffer()),
+      fetch('NotoSans-Bold.ttf').then(r=>r.arrayBuffer()),
+    ]);
+    fontR = await doc.embedFont(rB,{subset:true});
+    fontB = await doc.embedFont(bB,{subset:true});
+  } catch(e) {
+    const {StandardFonts}=PDFLib;
+    fontR = await doc.embedFont(StandardFonts.Helvetica);
+    fontB = await doc.embedFont(StandardFonts.HelveticaBold);
+  }
+  const d = window._paketData||{};
+  const weeks=d.weeks||12, ortLabel=d.ortLabel||'', erstmal=d.erstmal;
+  const food=d.food, alkohol=d.alkohol, hasBuilds=d.hasBuilds;
+  const hasMusik=d.hasMusik, traffic=d.traffic;
+  const bigEvent=d.bigEvent, veryBig=d.veryBig, nochFehlt=d.nochFehlt||[];
+  const W2=595,H=842,ML=52,MR=543,MT=780;
+  const ink=rgb(.11,.09,.06),amber=rgb(.78,.49,.05);
+  const muted=rgb(.54,.49,.41),red2=rgb(.69,.19,.12);
+  let page=doc.addPage([W2,H]); let y=MT;
+  const footer=()=>page.drawText('Veranstaltungsberater Stuttgart - Stand Juni 2026 - Diese Liste ersetzt keine Genehmigung.',{x:ML,y:18,size:7.5,font:fontR,color:muted});
+  const chkPg=(n=40)=>{ if(y<n+50){page=doc.addPage([W2,H]);y=MT;footer();} };
+  const gap=(px=8)=>{y-=px;};
+  const txt=(t,x2,y2,sz,f,c)=>page.drawText(t,{x:x2,y:y2,size:sz,font:f,color:c});
+  const wrapTxt=(t,maxW,sz)=>{
+    const words=t.split(' ');const lines=[];let cur='';
+    const cw=sz*0.52;
+    for(const w of words){if((cur+' '+w).length*cw>maxW&&cur){lines.push(cur.trim());cur=w;}else cur+=(cur?' ':'')+w;}
+    if(cur)lines.push(cur.trim());return lines;
+  };
+  const drawLines=(lines,x2,sz,f,c,ld=13)=>{for(const l of lines){chkPg(sz+4);txt(l,x2,y,sz,f,c);y-=ld;}};
+  const secHead=(t)=>{chkPg(28);gap(6);page.drawRectangle({x:ML,y:y-3,width:MR-ML,height:17,color:rgb(.91,.88,.82)});txt(t.toUpperCase(),ML+6,y+2,8.5,fontB,muted);y-=22;};
+  const chkItem=(title,why,dl2,office,warn=false)=>{
+    chkPg(55);
+    page.drawRectangle({x:ML,y:y-1,width:10,height:10,borderColor:muted,borderWidth:1});
+    txt(title,ML+16,y+1,10.5,fontB,ink);y-=16;
+    if(why){const ls=wrapTxt(why,MR-ML-20,9);drawLines(ls,ML+16,9,fontR,muted);}
+    if(dl2||office){
+      const tc=warn?red2:amber;
+      if(dl2){page.drawRectangle({x:ML+16,y:y-2,width:dl2.length*5+12,height:13,borderColor:tc,borderWidth:.7});txt(dl2,ML+20,y,8,fontR,tc);}
+      if(office){const ox=ML+16+(dl2?dl2.length*5+16:0);page.drawRectangle({x:ox,y:y-2,width:office.length*4.8+10,height:13,borderColor:muted,borderWidth:.7});txt(office,ox+4,y,8,fontR,muted);}
+      y-=18;
+    }y-=4;
+  };
+  // Cover
+  page.drawRectangle({x:0,y:H-96,width:W2,height:96,color:ink});
+  txt('STUTTGART - STAND JUNI 2026',ML,H-28,9,fontB,amber);
+  txt('Ihre persönliche Veranstaltungsmappe',ML,H-48,17,fontB,rgb(.96,.94,.90));
+  txt((erstmal?'Erstveranstaltung':'Wiederkehrende Veranstaltung')+' - '+ortLabel,ML,H-66,10.5,fontR,rgb(.7,.66,.58));
+  txt('Antragsfrist: ca. '+weeks+' Wochen',ML,H-82,9.5,fontR,rgb(.85,.78,.62));
+  footer();y=MT-16;
+  // Hinweis
+  page.drawRectangle({x:ML,y:y-32,width:MR-ML,height:44,color:rgb(.99,.95,.88),borderColor:amber,borderWidth:1});
+  txt('WICHTIGER HINWEIS',ML+8,y+5,8,fontB,amber);
+  txt('Diese Liste ersetzt keine Genehmigung. Sie zeigt, welche Unterlagen voraussichtlich erforderlich sind.',ML+8,y-7,8.5,fontR,rgb(.35,.25,.12));
+  txt('Ausgefüllte Formulare müssen unterschrieben und mit den erforderlichen Nachweisen eingereicht werden.',ML+8,y-19,8.5,fontR,rgb(.35,.25,.12));
+  y-=52;gap(6);
+  // Items
+  secHead('Pflichtunterlagen - jede öffentliche Veranstaltung');
+  chkItem('Antrag auf Überlassung öffentlicher Verkehrsfläche','Hauptantrag §29 StVO. Koordiniert alle beteiligten Stellen - Polizei, Feuerwehr, Tiefbauamt.','ca. '+weeks+' Wochen vorher','Bürgerservice Veranstaltungen');
+  chkItem('Veranstaltererklärung §29 StVO','Bestätigung der Kostenübernahme für verkehrsrechtliche Maßnahmen.','ca. '+weeks+' Wochen vorher','Bürgerservice Veranstaltungen');
+  chkItem('Belegungsplan 1:500 (max. DIN A3)','Rettungswege und Feuergassen von mind. 5 m Breite freihalten. Abstand zu Gebäuden mind. 2 m.','ca. '+weeks+' Wochen vorher','Stadtmessungsamt (kostenpflichtig)');
+  chkItem('Veranstaltungshaftpflichtversicherung','Versicherungssumme individuell je nach erwarteter Personenzahl festgelegt.','Spätestens 2 Wochen vorher','Bürgerservice Veranstaltungen',true);
+  chkItem('Alleinverantwortliche(n) Veranstaltungsleiter/-in','Einzige Ansprechperson für Polizei und Feuerwehr. Muss eine Stellvertretung haben.','Im Antrag angeben','');
+  if(veryBig)chkItem('Sicherheitskonzept (schriftlich)','Ab 1.000 Personen - Versammlungsstättenverordnung BW.','ca. '+weeks+' Wochen vorher','Bürgerservice Veranstaltungen',true);
+  chkItem(bigEvent?'Verstärkter Sanitätsdienst':'Sanitätsdienst','Kann bei Veranstaltungen erforderlich sein. Zuständige Behörde entscheidet über Umfang.','Rechtzeitig klären','DRK / DLRG / Malteser / Johanniter');
+  if(food){
+    secHead('Gastronomie');
+    chkItem('Anzeige nach §2 LGastG BW - pro Standbetreiber','Neues Landesgaststättengesetz BW. Jeder Stand einzeln. Beim Amt klären, welche Anforderungen gelten.','Mind. 2 Wochen vorher','Gewerbe- und Gaststättenrecht');
+    if(alkohol)chkItem('Gaststättenrechtliche Gestattung (prüfen)','Für Alkoholausschank kann eine Gestattung erforderlich sein. Beim Amt für öffentliche Ordnung klären.','Mind. 2 Wochen vorher','Gewerbe- und Gaststättenrecht',true);
+    chkItem('Hygiene-Auflagen einhalten','Begehung durch Lebensmittelkontrolle möglich. Festes Dach, abwaschbare Böden, Kühlmöglichkeiten.','Ab Aufbau','Lebensmittelüberwachung');
+  }
+  if(hasBuilds){
+    secHead('Fliegende Bauten');
+    chkItem('Prüfbuch / statische Nachweise (je nach Größe)','Je nach Größe und Konstruktion können Prüfbuch oder statische Nachweise erforderlich sein.','ca. '+weeks+' Wochen vorher','Baurechtsamt, Eberhardstr. 33');
+    chkItem('Rettungswege freihalten','Rettungswege und Feuergassen von mind. 5 m Breite. Abstand zu Gebäuden 2 m.','Gilt ab Aufbau','Branddirektion');
+  }
+  if(hasMusik){
+    secHead('Musik & Lärm');
+    chkItem('Musikzeiten im Antrag angeben','Sonntags keine Lärmaktionen 9-11 Uhr. Nachtruhe ab 22:00 - in Zelten bis 23:00 mit Genehmigung.','Im Antrag angeben','Bürgerservice Veranstaltungen');
+  }
+  if(traffic){
+    secHead('Verkehrsmaßnahmen');
+    chkItem('MVAS-Schulungsnachweis','Merkblatt über Rahmenbedingungen für Fachkenntnisse zur Verkehrsabsicherung.','ca. '+weeks+' Wochen vorher','Tiefbauamt');
+    chkItem('Verkehrsrechtliche Anordnung §§45, 46 StVO','Jede Sperrung amtlich anordnen. Fachfirma spart 15% Verwaltungsgebühr.','ca. '+weeks+' Wochen vorher','Tiefbauamt');
+  }
+  if(nochFehlt.length>0){
+    secHead('Noch nicht automatisch erstellt - manuell einzureichen');
+    for(const item of nochFehlt){chkPg(20);page.drawRectangle({x:ML,y:y-1,width:10,height:10,borderColor:muted,borderWidth:1});txt(item,ML+16,y+1,10,fontR,ink);y-=18;}gap(6);
+  }
+  // Zeitplan
+  chkPg(120);gap(10);
+  page.drawRectangle({x:ML,y:y-4,width:MR-ML,height:19,color:rgb(.99,.95,.88),borderColor:amber,borderWidth:1});
+  txt('IHR ZEITPLAN',ML+8,y+7,9,fontB,amber);y-=26;
+  const tlR=[
+    ['ca. '+weeks+' Wochen vorher','Antrag beim Amt einreichen (inkl. Belegungsplan'+(hasBuilds?', Prüfbuch':'')+(traffic?', MVAS':'')+')'],
+    ['-2 Wochen','Haftpflichtversicherung einreichen'+(food?' - Gastronomie-Anträge':'')],
+    ['Bis zur Veranstaltung','Rettungswege markieren und freihalten'],
+    ['Veranstaltungstag','Begehung mit Polizei, Feuerwehr und Sanitätsdienst'],
+    ['Während der Veranstaltung','Nachtruhe ab 22:00 - Sonntags kein Aufbau 9-11 Uhr'],
+  ];
+  for(const [w2,wh] of tlR){
+    chkPg(22);txt(w2,ML,y,8.5,fontB,amber);
+    const whL=wrapTxt(wh,MR-ML-130,9);
+    txt(whL[0]||'',ML+128,y,9,fontR,ink);y-=15;
+    for(let i=1;i<whL.length;i++){chkPg(14);txt(whL[i],ML+128,y,9,fontR,ink);y-=14;}
+  }
+  // Kontakte
+  chkPg(80);gap(14);txt('KONTAKTE',ML,y,8,fontB,muted);y-=14;
+  const cts=[['Amt für öffentliche Ordnung - Bürgerservice Veranstaltungen','Tel. 0711 216-91131 - veranstaltungsmanagement@stuttgart.de - Eberhardstr. 35, 70173 Stuttgart']];
+  if(food)cts.push(['Gewerbe- und Gaststättenrecht','Tel. 0711 216-98905 - gaststaettenrecht@stuttgart.de - Schloßstr. 73, 70176 Stuttgart']);
+  if(hasBuilds)cts.push(['Baurechtsamt','Tel. 0711 216-60100 - BSBauen@stuttgart.de - Eberhardstr. 33, 70173 Stuttgart']);
+  for(const [cn,cd] of cts){chkPg(34);page.drawRectangle({x:ML,y:y-16,width:MR-ML,height:28,borderColor:rgb(.87,.83,.75),borderWidth:.7});txt(cn,ML+8,y+5,9.5,fontB,ink);txt(cd,ML+8,y-8,8.5,fontR,muted);y-=36;}
+  return new Blob([await doc.save()],{type:'application/pdf'});
+}
+
+async function downloadAllAsZip(antrag, erklaerung, checkliste) {
+  const [aB,eB,cB] = await Promise.all([antrag.arrayBuffer(),erklaerung.arrayBuffer(),checkliste.arrayBuffer()]);
+  const files = [
+    {name:'1_Veranstaltungsmappe_Checkliste.pdf', data:new Uint8Array(cB)},
+    {name:'2_Antrag_Verkehrsflaeche.pdf', data:new Uint8Array(aB)},
+    {name:'3_Veranstaltererklaerung.pdf', data:new Uint8Array(eB)},
+  ];
+  dl(new Blob([buildZip(files)],{type:'application/zip'}),'Veranstaltungspaket_Stuttgart.zip');
+}
+
+function buildZip(files) {
+  const enc=new TextEncoder();const parts=[];const centralDir=[];let offset=0;
+  for(const file of files){
+    const nb=enc.encode(file.name);const crc=crc32(file.data);const sz=file.data.length;
+    const lh=new Uint8Array(30+nb.length);const lv=new DataView(lh.buffer);
+    lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0,true);
+    lv.setUint16(8,0,true);lv.setUint16(10,0,true);lv.setUint16(12,0,true);
+    lv.setUint32(14,crc,true);lv.setUint32(18,sz,true);lv.setUint32(22,sz,true);
+    lv.setUint16(26,nb.length,true);lv.setUint16(28,0,true);lh.set(nb,30);
+    parts.push(lh);parts.push(file.data);
+    const cd=new Uint8Array(46+nb.length);const cv=new DataView(cd.buffer);
+    cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);
+    cv.setUint16(8,0,true);cv.setUint16(10,0,true);cv.setUint16(12,0,true);cv.setUint16(14,0,true);
+    cv.setUint32(16,crc,true);cv.setUint32(20,sz,true);cv.setUint32(24,sz,true);
+    cv.setUint16(28,nb.length,true);cv.setUint16(30,0,true);cv.setUint16(32,0,true);
+    cv.setUint16(34,0,true);cv.setUint16(36,0,true);cv.setUint32(38,0,true);cv.setUint32(42,offset,true);
+    cd.set(nb,46);centralDir.push(cd);offset+=lh.length+sz;
+  }
+  const cdOffset=offset;const cdData=concatU8(centralDir);
+  const eocd=new Uint8Array(22);const ev=new DataView(eocd.buffer);
+  ev.setUint32(0,0x06054b50,true);ev.setUint16(4,0,true);ev.setUint16(6,0,true);
+  ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);
+  ev.setUint32(12,cdData.length,true);ev.setUint32(16,cdOffset,true);ev.setUint16(20,0,true);
+  return concatU8([...parts,cdData,eocd]);
+}
+
+function concatU8(arrays){const t=arrays.reduce((s,a)=>s+a.length,0);const o=new Uint8Array(t);let p=0;for(const a of arrays){o.set(a,p);p+=a.length;}return o;}
+
+function crc32(data){
+  let c=0xFFFFFFFF;
+  if(!crc32.t){crc32.t=new Uint32Array(256);for(let i=0;i<256;i++){let x=i;for(let j=0;j<8;j++)x=(x&1)?(0xEDB88320^(x>>>1)):(x>>>1);crc32.t[i]=x;}}
+  for(let i=0;i<data.length;i++)c=crc32.t[(c^data[i])&0xFF]^(c>>>8);
+  return(c^0xFFFFFFFF)>>>0;
 }
 
 async function fillAntrag(data) {
@@ -891,161 +1073,6 @@ function dl(blob,name){ const u=URL.createObjectURL(blob),a=document.createEleme
 // ═══════════════════════════════════════
 // PDF PAKET
 // ═══════════════════════════════════════
-async function downloadPaket() {
-  const btn = document.querySelector('.pp-btn-main');
-  btn.textContent = 'Wird erstellt...'; btn.disabled = true;
-  try {
-    const {PDFDocument,rgb} = PDFLib;
-    const doc = await PDFDocument.create();
-
-    // Load NotoSans for full German character support (ä ö ü ß § etc.)
-    let fontR, fontB;
-    try {
-      const [rBytes, bBytes] = await Promise.all([
-        fetch('NotoSans-Regular.ttf').then(r=>r.arrayBuffer()),
-        fetch('NotoSans-Bold.ttf').then(r=>r.arrayBuffer()),
-      ]);
-      fontR = await doc.embedFont(rBytes, {subset: true});
-      fontB = await doc.embedFont(bBytes, {subset: true});
-    } catch(e) {
-      // Fallback to standard fonts if TTF not available
-      const {StandardFonts} = PDFLib;
-      fontR = await doc.embedFont(StandardFonts.Helvetica);
-      fontB = await doc.embedFont(StandardFonts.HelveticaBold);
-    }
-    const d = window._paketData || {};
-    const weeks=d.weeks||12, ortLabel=d.ortLabel||'', erstmal=d.erstmal;
-    const food=d.food, alkohol=d.alkohol, hasBuilds=d.hasBuilds;
-    const hasMusik=d.hasMusik, traffic=d.traffic;
-    const bigEvent=d.bigEvent, veryBig=d.veryBig, nochFehlt=d.nochFehlt||[];
-    const W2=595,H=842,ML=52,MR=543,MT=780;
-    const ink=rgb(.11,.09,.06), amber=rgb(.78,.49,.05), green2=rgb(.16,.37,.25);
-    const muted=rgb(.54,.49,.41), red2=rgb(.69,.19,.12);
-    let page=doc.addPage([W2,H]); let y=MT;
-
-    const footer=()=>{ page.drawText('Veranstaltungsberater Stuttgart - Stand Juni 2026 - Diese Liste ersetzt keine Genehmigung.',{x:ML,y:18,size:7.5,font:fontR,color:muted}); };
-    const chkPg=(n=40)=>{ if(y<n+50){ page=doc.addPage([W2,H]); y=MT; footer(); } };
-    const gap=(px=8)=>{ y-=px; };
-    const txt=(t,x2,y2,sz,f,c)=>page.drawText(t,{x:x2,y:y2,size:sz,font:f,color:c});
-
-    // wrap text to max width
-    const wrapTxt=(t,maxW,sz,f)=>{
-      const words=t.split(' '); const lines=[]; let cur='';
-      const charW=sz*0.52;
-      for(const w of words){
-        if((cur+' '+w).length*charW>maxW&&cur){ lines.push(cur.trim()); cur=w; }
-        else cur+=(cur?' ':'')+w;
-      } if(cur) lines.push(cur.trim()); return lines;
-    };
-
-    const drawLines=(lines,x2,sz,f,c,leading=13)=>{ for(const l of lines){ chkPg(sz+4); txt(l,x2,y,sz,f,c); y-=leading; } };
-
-    const secHead=(t)=>{ chkPg(28); gap(6); page.drawRectangle({x:ML,y:y-3,width:MR-ML,height:17,color:rgb(.91,.88,.82)}); txt(t.toUpperCase(),ML+6,y+2,8.5,fontB,muted); y-=22; };
-
-    const chkItem=(title,why,dl2,office,warn=false)=>{
-      chkPg(55);
-      page.drawRectangle({x:ML,y:y-1,width:10,height:10,borderColor:muted,borderWidth:1});
-      txt(title,ML+16,y+1,10.5,fontB,ink); y-=16;
-      if(why){ const ls=wrapTxt(why,MR-ML-20,9,fontR); drawLines(ls,ML+16,9,fontR,muted); }
-      if(dl2||office){
-        const tc=warn?red2:amber;
-        if(dl2){ page.drawRectangle({x:ML+16,y:y-2,width:dl2.length*5+12,height:13,borderColor:tc,borderWidth:.7}); txt(dl2,ML+20,y,8,fontR,tc); }
-        if(office){ const ox=ML+16+(dl2?dl2.length*5+16:0); page.drawRectangle({x:ox,y:y-2,width:office.length*4.8+10,height:13,borderColor:muted,borderWidth:.7}); txt(office,ox+4,y,8,fontR,muted); }
-        y-=18;
-      } y-=4;
-    };
-
-    // Cover
-    page.drawRectangle({x:0,y:H-96,width:W2,height:96,color:ink});
-    txt('STUTTGART - STAND JUNI 2026',ML,H-28,9,fontB,amber);
-    txt('Ihre persönliche Veranstaltungsmappe',ML,H-48,17,fontB,rgb(.96,.94,.90));
-    txt((erstmal?'Erstveranstaltung':'Wiederkehrende Veranstaltung')+' - '+ortLabel,ML,H-66,10.5,fontR,rgb(.7,.66,.58));
-    txt('Antragsfrist: ca. '+weeks+' Wochen',ML,H-82,9.5,fontR,rgb(.85,.78,.62));
-    footer(); y=MT-16;
-
-    // Hinweis
-    page.drawRectangle({x:ML,y:y-32,width:MR-ML,height:44,color:rgb(.99,.95,.88),borderColor:amber,borderWidth:1});
-    txt('WICHTIGER HINWEIS',ML+8,y+5,8,fontB,amber);
-    txt('Diese Liste ersetzt keine Genehmigung. Sie zeigt, welche Unterlagen voraussichtlich erforderlich sind.',ML+8,y-7,8.5,fontR,rgb(.35,.25,.12));
-    txt('Ausgefüllte Formulare müssen unterschrieben und mit den erforderlichen Nachweisen eingereicht werden.',ML+8,y-19,8.5,fontR,rgb(.35,.25,.12));
-    y-=52; gap(6);
-
-    // Pflichtunterlagen
-    secHead('Pflichtunterlagen - jede öffentliche Veranstaltung');
-    chkItem('Antrag auf Überlassung öffentlicher Verkehrsfläche','Hauptantrag §29 StVO. Koordiniert alle beteiligten Stellen - Polizei, Feuerwehr, Tiefbauamt.',`ca. ${weeks} Wochen vorher`,'Bürgerservice Veranstaltungen');
-    chkItem('Veranstaltererklärung §29 StVO','Bestätigung der Kostenübernahme für verkehrsrechtliche Maßnahmen.',`ca. ${weeks} Wochen vorher`,'Bürgerservice Veranstaltungen');
-    chkItem('Belegungsplan 1:500 (max. DIN A3)','Rettungswege und Feuergassen von mind. 5 m Breite freihalten. Abstand zu Gebäuden mind. 2 m.',`ca. ${weeks} Wochen vorher`,'Stadtmessungsamt (kostenpflichtig)');
-    chkItem('Veranstaltungshaftpflichtversicherung','Versicherungssumme individuell je nach erwarteter Personenzahl festgelegt.','Spätestens 2 Wochen vorher','Bürgerservice Veranstaltungen',true);
-    chkItem('Alleinverantwortliche(n) Veranstaltungsleiter/-in benennen','Einzige Ansprechperson für Polizei und Feuerwehr. Muss eine Stellvertretung haben.','Im Antrag angeben','');
-    if(veryBig) chkItem('Sicherheitskonzept (schriftlich)','Ab 1.000 Personen - Versammlungsstaettenverordnung BW. Evakuierung, Ordnerdichte, Notfallplan.',`ca. ${weeks} Wochen vorher`,'Bürgerservice Veranstaltungen',true);
-    chkItem(bigEvent?'Verstaerkter Sanitätsdienst':'Sanitätsdienst organisieren','Kann bei Veranstaltungen erforderlich sein. Zuständige Behörde entscheidet über Umfang.','Rechtzeitig klären','DRK / DLRG / Malteser / Johanniter');
-
-    if(food){
-      secHead('Gastronomie');
-      chkItem('Anzeige nach §2 LGastG BW - pro Standbetreiber','Neues Landesgaststaettengesetz BW. Jeder Stand einzeln. Beim Amt klären, welche Anforderungen gelten.','Mind. 2 Wochen vorher','Gewerbe- und Gaststättenrecht');
-      if(alkohol) chkItem('Gaststättenrechtliche Gestattung (prüfen)','Für Alkoholausschank kann eine Gestattung erforderlich sein. Beim Amt für öffentliche Ordnung klären.','Mind. 2 Wochen vorher','Gewerbe- und Gaststättenrecht',true);
-      chkItem('Hygiene-Auflagen einhalten','Begehung durch Lebensmittelkontrolle möglich. Festes Dach, abwaschbare Böden, Kühlmöglichkeiten.','Ab Aufbau','Lebensmittelüberwachung');
-    }
-    if(hasBuilds){
-      secHead('Fliegende Bauten');
-      chkItem('Prüfbuch / statische Nachweise (je nach Größe)','Je nach Größe und Konstruktion können Prüfbuch oder statische Nachweise erforderlich sein.',`ca. ${weeks} Wochen vorher`,'Baurechtsamt, Eberhardstr. 33');
-      chkItem('Rettungswege freihalten','Rettungswege und Feuergassen von mind. 5 m Breite. Abstand zu Gebäuden 2 m.','Gilt ab Aufbau','Branddirektion');
-    }
-    if(hasMusik){
-      secHead('Musik & Laerm');
-      chkItem('Musikzeiten im Antrag angeben','Sonntags keine Lärmaktionen 9-11 Uhr. Nachtruhe ab 22:00 - in Zelten bis 23:00 mit Genehmigung.','Im Antrag angeben','Bürgerservice Veranstaltungen');
-    }
-    if(traffic){
-      secHead('Verkehrsmassnahmen');
-      chkItem('MVAS-Schulungsnachweis','Merkblatt über Rahmenbedingungen für Fachkenntnisse zur Verkehrsabsicherung.',`ca. ${weeks} Wochen vorher`,'Tiefbauamt');
-      chkItem('Verkehrsrechtliche Anordnung §§45, 46 StVO','Jede Sperrung amtlich anordnen. Fachfirma spart 15% Verwaltungsgebühr.',`ca. ${weeks} Wochen vorher`,'Tiefbauamt');
-    }
-
-    // Noch nicht erstellt
-    if(nochFehlt.length>0){
-      secHead('Noch nicht automatisch erstellt - manuell einzureichen');
-      for(const item of nochFehlt){
-        chkPg(20); page.drawRectangle({x:ML,y:y-1,width:10,height:10,borderColor:muted,borderWidth:1});
-        txt(item,ML+16,y+1,10,fontR,ink); y-=18;
-      } gap(6);
-    }
-
-    // Zeitplan
-    chkPg(120); gap(10);
-    page.drawRectangle({x:ML,y:y-4,width:MR-ML,height:19,color:rgb(.99,.95,.88),borderColor:amber,borderWidth:1});
-    txt('IHR ZEITPLAN',ML+8,y+7,9,fontB,amber); y-=26;
-    const tlR=[
-      [`ca. ${weeks} Wochen vorher`,`Antrag beim Amt einreichen (inkl. Belegungsplan${hasBuilds?', Prüfbuch':''}${traffic?', MVAS':''})`],
-      ['-2 Wochen',`Haftpflichtversicherung einreichen${food?' - Gastronomie-Anträge':''}`],
-      ['Bis zur Veranstaltung','Rettungswege markieren und freihalten'],
-      ['Veranstaltungstag','Begehung mit Polizei, Feuerwehr und Sanitätsdienst'],
-      ['Während der Veranstaltung','Nachtruhe ab 22:00 - Sonntags kein Aufbau 9-11 Uhr'],
-    ];
-    for(const [w2,wh] of tlR){
-      chkPg(22);
-      txt(w2,ML,y,8.5,fontB,amber);
-      const whLines=wrapTxt(wh,MR-ML-130,9,fontR);
-      txt(whLines[0]||'',ML+128,y,9,fontR,ink);
-      y-=15;
-      for(let wi=1;wi<whLines.length;wi++){ chkPg(14); txt(whLines[wi],ML+128,y,9,fontR,ink); y-=14; }
-    }
-
-    // Kontakte
-    chkPg(80); gap(14);
-    txt('KONTAKTE',ML,y,8,fontB,muted); y-=14;
-    const cts=[['Amt für öffentliche Ordnung - Bürgerservice Veranstaltungen','Tel. 0711 216-91131 - veranstaltungsmanagement@stuttgart.de - Eberhardstr. 35, 70173 Stuttgart']];
-    if(food) cts.push(['Gewerbe- und Gaststättenrecht','Tel. 0711 216-98905 - gaststaettenrecht@stuttgart.de - Schloßstr. 73, 70176 Stuttgart']);
-    if(hasBuilds) cts.push(['Baurechtsamt','Tel. 0711 216-60100 - BSBauen@stuttgart.de - Eberhardstr. 33, 70173 Stuttgart']);
-    for(const [cn,cd] of cts){
-      chkPg(34); page.drawRectangle({x:ML,y:y-16,width:MR-ML,height:28,borderColor:rgb(.87,.83,.75),borderWidth:.7});
-      txt(cn,ML+8,y+5,9.5,fontB,ink); txt(cd,ML+8,y-8,8.5,fontR,muted); y-=36;
-    }
-
-    dl(new Blob([await doc.save()],{type:'application/pdf'}),'Veranstaltungsmappe_Stuttgart.pdf');
-  } catch(err){ console.error(err); alert('Fehler: '+err.message); }
-  btn.textContent='Vollstandiges Paket herunterladen'; btn.disabled=false;
-}
-
 function restart() {
   Object.keys(W).forEach(k=>delete W[k]);
   hideSofort();
