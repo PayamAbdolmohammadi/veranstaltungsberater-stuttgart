@@ -847,11 +847,11 @@ async function buildChecklistePDF() {
   let fontR, fontB;
   try {
     const [rB,bB] = await Promise.all([
-      fetch('NotoSans-Regular.ttf').then(r=>r.arrayBuffer()),
-      fetch('NotoSans-Bold.ttf').then(r=>r.arrayBuffer()),
+      fetch('NotoSans-Regular.ttf').then(r=>{ if(!r.ok) throw new Error('font not found'); return r.arrayBuffer(); }),
+      fetch('NotoSans-Bold.ttf').then(r=>{ if(!r.ok) throw new Error('font not found'); return r.arrayBuffer(); }),
     ]);
-    fontR = await doc.embedFont(rB,{subset:true});
-    fontB = await doc.embedFont(bB,{subset:true});
+    fontR = await doc.embedFont(rB);
+    fontB = await doc.embedFont(bB);
   } catch(e) {
     const {StandardFonts}=PDFLib;
     fontR = await doc.embedFont(StandardFonts.Helvetica);
@@ -1009,48 +1009,60 @@ function crc32(data){
 
 async function fillAntrag(data) {
   const {PDFDocument}=PDFLib; let pdfBytes;
-  try { pdfBytes=await fetch('antrag_source.pdf').then(r=>r.arrayBuffer()); } catch(e) { return makeFallback(data,'Antrag §29 StVO'); }
-  const doc=await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
-  const form=doc.getForm();
-  const st=(f,v)=>{try{if(!v&&v!==false)return;const fld=form.getField(f);if(fld.constructor.name==='PDFTextField')fld.setText(String(v));else if(fld.constructor.name==='PDFCheckBox'&&v)fld.check();}catch(e){}};
-  const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
-  st('NameVer',data.veranstaltungsname); st('NameInst',data.institution);
-  if(data.gemeinnuetzig) sc('gemüt');
-  st('Anschrift',data.anschrift); st('AnsprNam',data.ansprech_name);
-  st('AnsprTelp',data.ansprech_tel); st('AnsprTelM',data.ansprech_mobil);
-  st('AnsprNamEM',data.ansprech_email); st('VerantNam',data.ansprech_name);
-  st('VerantTelp',data.ansprech_tel); st('VerantwTelM',data.ansprech_mobil);
-  st('AufDat',data.aufbau_datum); st('UhrAuf',data.aufbau_uhrzeit);
-  st('VerDat',data.veranstaltung_datum); st('VerUhrAuf',data.veranstaltung_uhrzeit);
-  st('MusUhr',data.musik_uhrzeit); st('EndAus',data.ausschank_ende);
-  st('AbDat',data.abbau_datum); st('Abuhr',data.abbau_uhrzeit);
-  st('gleichzanw',data.besucher_gleichzeitig); st('gesamtanw',data.besucher_gesamt);
-  st('AngaOrt',data.ort_beschreibung);
-  st('DatUnt',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
-  if(data.ort_typ==='strasse') sc('Strfl'); else if(data.ort_typ==='gehweg') sc('Gehw'); else if(data.ort_typ==='fussgaenger') sc('Fußg');
-  const cbMap={garnituren:'Garn',verkaufsstaende:'Verk',zelte:'ZelPav',buehne:'Bühne',karussell:'KarFahr',huepfburg:'Hüpf',spielstrasse:'Spiel',tiere:'Tier'};
-  (data.aufbauten||[]).forEach(k=>{if(cbMap[k])sc(cbMap[k]);});
-  if(data.fluessiggas===true) sc('Flüj'); else if(data.fluessiggas===false) sc('Flün');
-  const anwMap={briefkasten:'BenBr',tagespresse:'BenTa',amtsblatt:'BenAm'};
-  if(anwMap[data.anwohner_benachrichtigung]) sc(anwMap[data.anwohner_benachrichtigung]);
-  form.flatten();
-  return new Blob([await doc.save()],{type:'application/pdf'});
+  try {
+    const r = await fetch('antrag_source.pdf');
+    if(!r.ok) throw new Error('not found');
+    pdfBytes = await r.arrayBuffer();
+  } catch(e) { return makeFallback(data,'Antrag §29 StVO'); }
+  try {
+    const doc=await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
+    const form=doc.getForm();
+    const st=(f,v)=>{try{if(!v&&v!==false)return;const fld=form.getField(f);if(fld.constructor.name==='PDFTextField')fld.setText(String(v));else if(fld.constructor.name==='PDFCheckBox'&&v)fld.check();}catch(e){}};
+    const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
+    st('NameVer',data.veranstaltungsname); st('NameInst',data.institution);
+    if(data.gemeinnuetzig) sc('gemüt');
+    st('Anschrift',data.anschrift); st('AnsprNam',data.ansprech_name);
+    st('AnsprTelp',data.ansprech_tel); st('AnsprTelM',data.ansprech_mobil);
+    st('AnsprNamEM',data.ansprech_email); st('VerantNam',data.ansprech_name);
+    st('VerantTelp',data.ansprech_tel); st('VerantwTelM',data.ansprech_mobil);
+    st('AufDat',data.aufbau_datum); st('UhrAuf',data.aufbau_uhrzeit);
+    st('VerDat',data.veranstaltung_datum); st('VerUhrAuf',data.veranstaltung_uhrzeit);
+    st('MusUhr',data.musik_uhrzeit); st('EndAus',data.ausschank_ende);
+    st('AbDat',data.abbau_datum); st('Abuhr',data.abbau_uhrzeit);
+    st('gleichzanw',data.besucher_gleichzeitig); st('gesamtanw',data.besucher_gesamt);
+    st('AngaOrt',data.ort_beschreibung);
+    st('DatUnt',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
+    if(data.ort_typ==='strasse') sc('Strfl'); else if(data.ort_typ==='gehweg') sc('Gehw'); else if(data.ort_typ==='fussgaenger') sc('Fußg');
+    const cbMap={garnituren:'Garn',verkaufsstaende:'Verk',zelte:'ZelPav',buehne:'Bühne',karussell:'KarFahr',huepfburg:'Hüpf',spielstrasse:'Spiel',tiere:'Tier'};
+    (data.aufbauten||[]).forEach(k=>{if(cbMap[k])sc(cbMap[k]);});
+    if(data.fluessiggas===true) sc('Flüj'); else if(data.fluessiggas===false) sc('Flün');
+    const anwMap={briefkasten:'BenBr',tagespresse:'BenTa',amtsblatt:'BenAm'};
+    if(anwMap[data.anwohner_benachrichtigung]) sc(anwMap[data.anwohner_benachrichtigung]);
+    form.flatten();
+    return new Blob([await doc.save()],{type:'application/pdf'});
+  } catch(e) { return makeFallback(data,'Antrag §29 StVO'); }
 }
 
 async function fillErklaerung(data) {
   const {PDFDocument}=PDFLib; let pdfBytes;
-  try { pdfBytes=await fetch('erklaerung_source.pdf').then(r=>r.arrayBuffer()); } catch(e) { return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
-  const doc=await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
-  const form=doc.getForm();
-  const st=(f,v)=>{try{if(!v)return;form.getTextField(f).setText(String(v));}catch(e){}};
-  const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
-  st('BeaInst',data.institution);
-  if(data.gemeinnuetzig) sc('gemeinnützig');
-  st('Anschrift Straße Hausnummer Postleitzahl Ort',data.anschrift);
-  st('Ansprechpartnerin Zuname Vorname',data.ansprech_name);
-  st('Datum und Unterschrift',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
-  form.flatten();
-  return new Blob([await doc.save()],{type:'application/pdf'});
+  try {
+    const r = await fetch('erklaerung_source.pdf');
+    if(!r.ok) throw new Error('not found');
+    pdfBytes = await r.arrayBuffer();
+  } catch(e) { return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
+  try {
+    const doc=await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
+    const form=doc.getForm();
+    const st=(f,v)=>{try{if(!v)return;form.getTextField(f).setText(String(v));}catch(e){}};
+    const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
+    st('BeaInst',data.institution);
+    if(data.gemeinnuetzig) sc('gemeinnützig');
+    st('Anschrift Straße Hausnummer Postleitzahl Ort',data.anschrift);
+    st('Ansprechpartnerin Zuname Vorname',data.ansprech_name);
+    st('Datum und Unterschrift',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
+    form.flatten();
+    return new Blob([await doc.save()],{type:'application/pdf'});
+  } catch(e) { return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
 }
 
 async function makeFallback(data,title) {
