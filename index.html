@@ -1025,7 +1025,7 @@ async function fillAntrag(data) {
     const st=(f,v)=>{try{if(!v&&v!==false)return;const fld=form.getField(f);if(fld.constructor.name==='PDFTextField')fld.setText(String(v));else if(fld.constructor.name==='PDFCheckBox'&&v)fld.check();}catch(e){}};
     const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
     st('NameVer',data.veranstaltungsname); st('NameInst',data.institution);
-    if(data.gemeinnuetzig) sc('gemüt');
+    if(data.gemeinnuetzig) sc('gemnü');
     st('Anschrift',data.anschrift); st('AnsprNam',data.ansprech_name);
     st('AnsprTelp',data.ansprech_tel); st('AnsprTelM',data.ansprech_mobil);
     st('AnsprNamEM',data.ansprech_email); st('VerantNam',data.ansprech_name);
@@ -1043,9 +1043,13 @@ async function fillAntrag(data) {
     if(data.fluessiggas===true) sc('Flüj'); else if(data.fluessiggas===false) sc('Flün');
     const anwMap={briefkasten:'BenBr',tagespresse:'BenTa',amtsblatt:'BenAm'};
     if(anwMap[data.anwohner_benachrichtigung]) sc(anwMap[data.anwohner_benachrichtigung]);
+    console.log('antrag: about to flatten');
     form.flatten();
-    return new Blob([await doc.save()],{type:'application/pdf'});
-  } catch(e) { console.error('PDF Error Antrag:', e.message, e); return makeFallback(data,'Antrag §29 StVO'); }
+    console.log('antrag: flattened, saving...');
+    const saved = await doc.save();
+    console.log('antrag: saved, size='+saved.byteLength);
+    return new Blob([saved],{type:'application/pdf'});
+  } catch(e) { console.error('PDF Error Antrag CATCH:', e.message, e.stack); return makeFallback(data,'Antrag §29 StVO'); }
 }
 
 async function fillErklaerung(data) {
@@ -1061,6 +1065,7 @@ async function fillErklaerung(data) {
     const form=doc.getForm();
     const st=(f,v)=>{try{if(!v)return;form.getTextField(f).setText(String(v));}catch(e){}};
     const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
+    st('Name der Veranstaltung',data.veranstaltungsname);
     st('BeaInst',data.institution);
     if(data.gemeinnuetzig) sc('gemeinnützig');
     st('Anschrift Straße Hausnummer Postleitzahl Ort',data.anschrift);
