@@ -1010,68 +1010,116 @@ function crc32(data){
 }
 
 async function fillAntrag(data) {
-  const {PDFDocument}=PDFLib; let pdfBytes;
+  const {PDFDocument,StandardFonts}=PDFLib;
   try {
-    // Use embedded base64 PDF — no fetch needed
-    const bin = atob(ANTRAG_PDF_B64);
-    pdfBytes = new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) pdfBytes[i]=bin.charCodeAt(i);
-    pdfBytes = pdfBytes.buffer;
-  } catch(e) { console.error('PDF Error Antrag:', e.message, e); return makeFallback(data,'Antrag §29 StVO'); }
-  try {
-    const doc=await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
-    console.log('antrag PDF loaded OK');
+    const bin=atob(ANTRAG_PDF_B64);
+    const arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    const doc=await PDFDocument.load(arr.buffer,{ignoreEncryption:true});
     const form=doc.getForm();
-    const st=(f,v)=>{try{if(!v&&v!==false)return;const fld=form.getField(f);if(fld.constructor.name==='PDFTextField')fld.setText(String(v));else if(fld.constructor.name==='PDFCheckBox'&&v)fld.check();}catch(e){}};
-    const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
-    st('NameVer',data.veranstaltungsname); st('NameInst',data.institution);
-    if(data.gemeinnuetzig) sc('gemnü');
-    st('Anschrift',data.anschrift); st('AnsprNam',data.ansprech_name);
-    st('AnsprTelp',data.ansprech_tel); st('AnsprTelM',data.ansprech_mobil);
-    st('AnsprNamEM',data.ansprech_email); st('VerantNam',data.ansprech_name);
-    st('VerantTelp',data.ansprech_tel); st('VerantwTelM',data.ansprech_mobil);
-    st('AufDat',data.aufbau_datum); st('UhrAuf',data.aufbau_uhrzeit);
-    st('VerDat',data.veranstaltung_datum); st('VerUhrAuf',data.veranstaltung_uhrzeit);
-    st('MusUhr',data.musik_uhrzeit); st('EndAus',data.ausschank_ende);
-    st('AbDat',data.abbau_datum); st('Abuhr',data.abbau_uhrzeit);
-    st('gleichzanw',data.besucher_gleichzeitig); st('gesamtanw',data.besucher_gesamt);
-    st('AngaOrt',data.ort_beschreibung);
-    st('DatUnt',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
-    if(data.ort_typ==='strasse') sc('Strfl'); else if(data.ort_typ==='gehweg') sc('Gehw'); else if(data.ort_typ==='fussgaenger') sc('Fußg');
-    const cbMap={garnituren:'Garn',verkaufsstaende:'Verk',zelte:'ZelPav',buehne:'Bühne',karussell:'KarFahr',huepfburg:'Hüpf',spielstrasse:'Spiel',tiere:'Tier'};
-    (data.aufbauten||[]).forEach(k=>{if(cbMap[k])sc(cbMap[k]);});
-    if(data.fluessiggas===true) sc('Flüj'); else if(data.fluessiggas===false) sc('Flün');
-    const anwMap={briefkasten:'BenBr',tagespresse:'BenTa',amtsblatt:'BenAm'};
-    if(anwMap[data.anwohner_benachrichtigung]) sc(anwMap[data.anwohner_benachrichtigung]);
-    console.log('antrag: saving without flatten...');
-    const saved = await doc.save();
-    console.log('antrag: saved, size='+saved.byteLength);
-    return new Blob([saved],{type:'application/pdf'});
-  } catch(e) { console.error('PDF Error Antrag CATCH:', e.message, e.stack); return makeFallback(data,'Antrag §29 StVO'); }
+    // Helvetica (WinAnsi) covers German umlauts; used to regenerate field appearances.
+    const helv=await doc.embedFont(StandardFonts.Helvetica);
+
+    // setT: fill a named text field, tolerant of missing/renamed fields
+    const setT=(name,value)=>{
+      if(value==null||value==='') return;
+      try { form.getTextField(name).setText(String(value)); } catch(e){}
+    };
+    // setC: check a named checkbox field
+    const setC=(name)=>{
+      try { form.getCheckBox(name).check(); } catch(e){}
+    };
+
+    // ---- Text fields (real AcroForm field names) ----
+    setT('NameVer',     data.veranstaltungsname);
+    setT('NameInst',    data.institution);
+    setT('Anschrift',   data.anschrift);
+    setT('AnsprNam',    data.ansprech_name);
+    setT('AnsprTelp',   data.ansprech_tel);
+    setT('AnsprTelM',   data.ansprech_mobil);
+    setT('AnsprNamEM',  data.ansprech_email);
+    // Verantwortliche(r) Leiter/-in am Veranstaltungstag (reuse Ansprechpartner)
+    setT('VerantNam',   data.ansprech_name);
+    setT('VerantTelp',  data.ansprech_tel);
+    setT('VerantwTelM', data.ansprech_mobil);
+    setT('AufDat',      data.aufbau_datum);
+    setT('UhrAuf',      data.aufbau_uhrzeit);
+    setT('VerDat',      data.veranstaltung_datum);
+    setT('VerUhrAuf',   data.veranstaltung_uhrzeit);
+    setT('MusUhr',      data.musik_uhrzeit);
+    setT('EndAus',      data.ausschank_ende);
+    setT('AbDat',       data.abbau_datum);
+    setT('Abuhr',       data.abbau_uhrzeit);
+    setT('gleichzanw',  data.besucher_gleichzeitig);
+    setT('gesamtanw',   data.besucher_gesamt);
+    setT('AngaOrt',     data.ort_beschreibung);
+    setT('DatUnt',      (data.ort_stadt||'Stuttgart')+', '+(data.datum_unterschrift||''));
+
+    // ---- Checkbox fields ----
+    if(data.gemeinnuetzig) setC('gemnü');
+
+    // Verkehrsfläche
+    if(data.ort_typ==='strasse')          setC('Strfl');
+    else if(data.ort_typ==='fussgaenger') setC('Fußg');
+    else if(data.ort_typ==='gehweg')      setC('Gehw');
+
+    // Flächenbelegung — wizard key -> field name (incl. Ausstellungsfläche)
+    const cbMap={
+      garnituren:'Garn', verkaufsstaende:'Verk', zelte:'ZelPav', buehne:'Bühne',
+      karussell:'KarFahr', ausstellung:'Ausst', huepfburg:'Hüpf',
+      spielstrasse:'Spiel', tiere:'Tier',
+    };
+    (data.aufbauten||[]).forEach(k=>{ if(cbMap[k]) setC(cbMap[k]); });
+
+    // Flüssiggas
+    if(data.fluessiggas===true)       setC('Flüj');
+    else if(data.fluessiggas===false) setC('Flün');
+
+    // Anwohnerbenachrichtigung
+    const anwMap={briefkasten:'BenBr', amtsblatt:'BenAm', tagespresse:'BenTa'};
+    if(anwMap[data.anwohner_benachrichtigung]) setC(anwMap[data.anwohner_benachrichtigung]);
+
+    // Regenerate appearances with an embedded font, then flatten so the
+    // result renders identically in every viewer (Acrobat, Preview, browser).
+    try { form.updateFieldAppearances(helv); } catch(e){}
+    try { form.flatten(); }
+    catch(e){ try { form.acroForm.dict.set(PDFLib.PDFName.of("NeedAppearances"), PDFLib.PDFBool.True); } catch(_){} }
+
+    return new Blob([await doc.save()],{type:'application/pdf'});
+  } catch(e) { console.error('fillAntrag:',e.message); return makeFallback(data,'Antrag §29 StVO'); }
 }
 
 async function fillErklaerung(data) {
-  const {PDFDocument}=PDFLib; let pdfBytes;
+  const {PDFDocument,StandardFonts}=PDFLib;
   try {
-    const bin = atob(ERKL_PDF_B64);
-    pdfBytes = new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) pdfBytes[i]=bin.charCodeAt(i);
-    pdfBytes = pdfBytes.buffer;
-  } catch(e) { console.error('PDF Error Erkl:', e.message, e); return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
-  try {
-    const doc=await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
+    const bin=atob(ERKL_PDF_B64);
+    const arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    const doc=await PDFDocument.load(arr.buffer,{ignoreEncryption:true});
     const form=doc.getForm();
-    const st=(f,v)=>{try{if(!v)return;form.getTextField(f).setText(String(v));}catch(e){}};
-    const sc=(f)=>{try{form.getCheckBox(f).check();}catch(e){}};
-    st('Name der Veranstaltung',data.veranstaltungsname);
-    st('BeaInst',data.institution);
-    if(data.gemeinnuetzig) sc('gemeinnützig');
-    st('Anschrift Straße Hausnummer Postleitzahl Ort',data.anschrift);
-    st('Ansprechpartnerin Zuname Vorname',data.ansprech_name);
-    st('Datum und Unterschrift',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
-    const savedE = await doc.save();
-    return new Blob([savedE],{type:'application/pdf'});
-  } catch(e) { console.error('PDF Error Erkl:', e.message, e); return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
+    const helv=await doc.embedFont(StandardFonts.Helvetica);
+
+    const setT=(name,value)=>{
+      if(value==null||value==='') return;
+      try { form.getTextField(name).setText(String(value)); } catch(e){}
+    };
+
+    // Text fields (real AcroForm field names on the Erklärung)
+    setT('Name der Veranstaltung', data.veranstaltungsname);
+    setT('BeaInst',                data.institution);
+    setT('Anschrift Straße Hausnummer Postleitzahl Ort', data.anschrift);
+    setT('Ansprechpartnerin Zuname Vorname',             data.ansprech_name);
+    setT('Datum und Unterschrift', (data.ort_stadt||'Stuttgart')+', '+(data.datum_unterschrift||''));
+
+    // gemeinnützig checkbox — on-state is "On" here (not "Ja")
+    if(data.gemeinnuetzig){ try { form.getCheckBox('gemeinnützig').check(); } catch(e){} }
+
+    try { form.updateFieldAppearances(helv); } catch(e){}
+    try { form.flatten(); }
+    catch(e){ try { form.acroForm.dict.set(PDFLib.PDFName.of("NeedAppearances"), PDFLib.PDFBool.True); } catch(_){} }
+
+    return new Blob([await doc.save()],{type:'application/pdf'});
+  } catch(e) { console.error('fillErklaerung:',e.message); return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
 }
 
 async function makeFallback(data,title) {
