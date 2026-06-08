@@ -1043,9 +1043,7 @@ async function fillAntrag(data) {
     if(data.fluessiggas===true) sc('Flüj'); else if(data.fluessiggas===false) sc('Flün');
     const anwMap={briefkasten:'BenBr',tagespresse:'BenTa',amtsblatt:'BenAm'};
     if(anwMap[data.anwohner_benachrichtigung]) sc(anwMap[data.anwohner_benachrichtigung]);
-    console.log('antrag: about to flatten');
-    form.flatten();
-    console.log('antrag: flattened, saving...');
+    console.log('antrag: saving without flatten...');
     const saved = await doc.save();
     console.log('antrag: saved, size='+saved.byteLength);
     return new Blob([saved],{type:'application/pdf'});
@@ -1071,8 +1069,8 @@ async function fillErklaerung(data) {
     st('Anschrift Straße Hausnummer Postleitzahl Ort',data.anschrift);
     st('Ansprechpartnerin Zuname Vorname',data.ansprech_name);
     st('Datum und Unterschrift',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
-    form.flatten();
-    return new Blob([await doc.save()],{type:'application/pdf'});
+    const savedE = await doc.save();
+    return new Blob([savedE],{type:'application/pdf'});
   } catch(e) { console.error('PDF Error Erkl:', e.message, e); return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
 }
 
