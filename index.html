@@ -1017,7 +1017,7 @@ async function fillAntrag(data) {
     pdfBytes = new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) pdfBytes[i]=bin.charCodeAt(i);
     pdfBytes = pdfBytes.buffer;
-  } catch(e) { return makeFallback(data,'Antrag §29 StVO'); }
+  } catch(e) { console.error('PDF Error Antrag:', e.message, e); return makeFallback(data,'Antrag §29 StVO'); }
   try {
     const doc=await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
     console.log('antrag PDF loaded OK');
@@ -1045,7 +1045,7 @@ async function fillAntrag(data) {
     if(anwMap[data.anwohner_benachrichtigung]) sc(anwMap[data.anwohner_benachrichtigung]);
     form.flatten();
     return new Blob([await doc.save()],{type:'application/pdf'});
-  } catch(e) { return makeFallback(data,'Antrag §29 StVO'); }
+  } catch(e) { console.error('PDF Error Antrag:', e.message, e); return makeFallback(data,'Antrag §29 StVO'); }
 }
 
 async function fillErklaerung(data) {
@@ -1055,7 +1055,7 @@ async function fillErklaerung(data) {
     pdfBytes = new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) pdfBytes[i]=bin.charCodeAt(i);
     pdfBytes = pdfBytes.buffer;
-  } catch(e) { return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
+  } catch(e) { console.error('PDF Error Erkl:', e.message, e); return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
   try {
     const doc=await PDFDocument.load(pdfBytes,{ignoreEncryption:true});
     const form=doc.getForm();
@@ -1068,7 +1068,7 @@ async function fillErklaerung(data) {
     st('Datum und Unterschrift',(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift);
     form.flatten();
     return new Blob([await doc.save()],{type:'application/pdf'});
-  } catch(e) { return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
+  } catch(e) { console.error('PDF Error Erkl:', e.message, e); return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
 }
 
 async function makeFallback(data,title) {
