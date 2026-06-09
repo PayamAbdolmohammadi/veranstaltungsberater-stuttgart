@@ -932,6 +932,7 @@ async function buildChecklistePDF() {
   const food=d.food, alkohol=d.alkohol, hasBuilds=d.hasBuilds;
   const hasMusik=d.hasMusik, traffic=d.traffic;
   const bigEvent=d.bigEvent, veryBig=d.veryBig, nochFehlt=d.nochFehlt||[];
+  const barriere=d.barriere; // 'ja' | 'nein' | 'unsure'
   const W2=595,H=842,ML=52,MR=543,MT=780;
   const ink=rgb(.11,.09,.06),amber=rgb(.78,.49,.05);
   const muted=rgb(.54,.49,.41),red2=rgb(.69,.19,.12);
@@ -1001,6 +1002,35 @@ async function buildChecklistePDF() {
     secHead('Verkehrsmaßnahmen');
     chkItem('MVAS-Schulungsnachweis','Merkblatt über Rahmenbedingungen für Fachkenntnisse zur Verkehrsabsicherung.','ca. '+weeks+' Wochen vorher','Tiefbauamt');
     chkItem('Verkehrsrechtliche Anordnung §§45, 46 StVO','Jede Sperrung amtlich anordnen. Fachfirma spart 15% Verwaltungsgebühr.','ca. '+weeks+' Wochen vorher','Tiefbauamt');
+  }
+  // Barrierefreiheit — immer (Inhalt variiert je nach Antwort), inhaltsgleich zur Beratungsseite
+  secHead('Barrierefreiheit');
+  if(barriere==='nein'){
+    chkItem('Barrierefreiheit noch klären','Barrierefreiheit wird von den Behörden zunehmend geprüft und sollte frühzeitig berücksichtigt werden. Vor der Antragstellung mit dem Bürgerservice Veranstaltungen abstimmen.','ca. '+weeks+' Wochen vorher - vor Antragstellung','Bürgerservice Veranstaltungen',true);
+  }
+  if(barriere==='unsure'){
+    chkItem('Was bedeutet Barrierefreiheit bei Veranstaltungen?','Bitte prüfen: barrierefreie WCs - rollstuhlgerechte Wege - Kabelbrücken über Leitungen - Stellplätze für Rollstuhlnutzende. Bei Unsicherheit Bürgerservice Veranstaltungen oder Veranstaltungsort kontaktieren.','ca. '+weeks+' Wochen vorher - Anforderungen erfragen','Bürgerservice Veranstaltungen',true);
+  }
+  chkItem('Barrierefreie WC-Anlage','Mindestens eine barrierefreie Toilette muss vorhanden und gut erreichbar sein. Im Belegungsplan einzeichnen.','Im Belegungsplan einzeichnen',barriere==='ja'?'Eingeplant':'Noch zu klären',barriere!=='ja');
+  chkItem('Kabelbrücken für Rollstühle','Kabel auf dem Boden müssen mit überfahrbaren Kabelbrücken abgedeckt sein, damit Rollstuhlfahrer sicher passieren können.','Ab Aufbau sicherstellen',barriere==='ja'?'Eingeplant':'Noch zu planen',barriere!=='ja');
+  chkItem('Rollstuhlstellplätze einplanen','Stellplätze für Rollstuhlfahrer müssen ausreichend breit, eben und nahe an Bühne oder Hauptbereich sein. Im Belegungsplan ausweisen.','Im Belegungsplan einzeichnen',barriere==='ja'?'Eingeplant':'Noch zu klären',barriere!=='ja');
+  // Häufige Rückfragen der Behörden — rote Warnbox, inhaltsgleich zur Beratungsseite
+  chkPg(40);gap(8);
+  page.drawRectangle({x:ML,y:y-3,width:MR-ML,height:17,color:rgb(.99,.94,.93),borderColor:red2,borderWidth:.8});
+  txt('HÄUFIGE RÜCKFRAGEN DER BEHÖRDEN',ML+6,y+2,8.5,fontB,red2);y-=24;
+  const rfItems=[
+    ['Fluchtwege nicht freigehalten','Rettungswege und Feuergassen müssen mind. 5 m breit und dauerhaft zugänglich sein - auch während der Veranstaltung.'],
+    ['Feuergassen fehlen oder zu schmal','Die Feuerwehr muss jederzeit mit Fahrzeugen durchfahren können. Im Belegungsplan einzeichnen und freihalten.'],
+    ['Hygiene-Auflagen nicht erfüllt','Für Gastro-Stände: festes Dach, abwaschbare Böden, Kühlmöglichkeit, Handwaschgelegenheit - Lebensmittelkontrolle kann vorbeikommen.'],
+    ['Lautstärke / Nachtruhe missachtet','Musik muss vor 22:00 Uhr enden. In geschlossenen Zelten bis 23:00 - nur mit ausdrücklicher Genehmigung. Sonntags keine Lärmaktionen 9-11 Uhr.'],
+    ['Barrierefreiheit nicht berücksichtigt','Barrierefreie WCs, Rollstuhlplätze und rollstuhlgerechte Wege werden zunehmend geprüft und können Einfluss auf die Genehmigung haben.'],
+  ];
+  for(const [titel,text] of rfItems){
+    chkPg(34);
+    txt(titel,ML+6,y,9.5,fontB,red2);y-=13;
+    const ls=wrapTxt(text,MR-ML-12,8.5);
+    for(const l of ls){chkPg(12);txt(l,ML+6,y,8.5,fontR,rgb(.4,.2,.16));y-=11;}
+    y-=5;
   }
   if(nochFehlt.length>0){
     secHead('Noch nicht automatisch erstellt - manuell einzureichen');
@@ -1100,15 +1130,9 @@ async function fillAntrag(data) {
       const s=sz||10; const y=rect[1]+(rect[3]-rect[1]-s)/2+1;
       try { page.drawText(String(text),{x:rect[0]+2,y,size:s,font,color:black,maxWidth:rect[2]-rect[0]-4}); } catch(e){}
     };
-    // cx: draw X centered in checkbox rect [x1,y1,x2,y2]
-    const cx=(page,rect)=>{
-      // Draw X using two crossing lines — no font needed
-      const x1=rect[0]+1, y1=rect[1]+1, x2=rect[2]-1, y2=rect[3]-1;
-      try {
-        page.drawLine({start:{x:x1,y:y1},end:{x:x2,y:y2},thickness:1.2,color:black});
-        page.drawLine({start:{x:x1,y:y2},end:{x:x2,y:y1},thickness:1.2,color:black});
-      } catch(e){ console.error('cx error:',e.message); }
-    };
+    // ck: amtliche Checkbox nativ ankreuzen (eigene Appearance, immer mittig, auch bei weißer Füllung)
+    const form=doc.getForm();
+    const ck=(name)=>{ try { form.getCheckBox(name).check(); } catch(e){ console.error('ck',name,e.message); } };
 
     // PAGE 1 — exact rects from pdf-lib annotation inspection
     dt(p1,data.veranstaltungsname,   [70.4, 601.9, 565.6, 619.4]);
@@ -1136,35 +1160,28 @@ async function fillAntrag(data) {
     dt(p2,data.ort_beschreibung,     [68.3, 744.0, 565.9, 775.8]);
     dt(p2,(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift, [68.8, 160.4, 232.1, 180.8], 9);
 
-    // Verkehrsfläche checkboxes
-    if(data.ort_typ==='strasse')     cx(p2,[67.0, 715.7, 78.8, 727.5]);
-    else if(data.ort_typ==='fussgaenger') cx(p2,[204.6, 715.9, 216.3, 727.6]);
-    else if(data.ort_typ==='gehweg') cx(p2,[321.9, 715.7, 333.6, 727.7]);
+    // Verkehrsfläche — native Checkboxen (Strfl/Fußg/Gehw)
+    if(data.ort_typ==='strasse')     ck('Strfl');
+    else if(data.ort_typ==='fussgaenger') ck('Fußg');
+    else if(data.ort_typ==='gehweg') ck('Gehw');
 
-    // Aufbau checkboxes — calibrated: annotation rect + offset(x-2, y+12)
+    // Aufbau — native Checkboxen (Feldnamen aus dem amtlichen Formular)
     const cbMap={
-      garnituren:   [66.2, 679.7, 77.9, 691.4],
-      verkaufsstaende:[203.5, 679.7, 215.3, 691.4],
-      zelte:        [320.9, 680.7, 332.7, 692.4],
-      buehne:       [424.6, 680.6, 436.4, 692.4],
-      karussell:    [66.1, 661.6, 77.9, 673.5],
-      huepfburg:    [320.9, 662.6, 332.8, 674.4],
-      spielstrasse: [424.6, 662.7, 436.5, 674.4],
-      tiere:        [66.1, 643.7, 77.9, 655.4],
+      garnituren:'Garn', verkaufsstaende:'Verk', zelte:'ZelPav', buehne:'Bühne',
+      karussell:'KarFahr', huepfburg:'Hüpf', spielstrasse:'Spiel', tiere:'Tier',
     };
-    (data.aufbauten||[]).forEach(k=>{if(cbMap[k])cx(p2,cbMap[k]);});
+    (data.aufbauten||[]).forEach(k=>{if(cbMap[k])ck(cbMap[k]);});
 
-    // Flüssiggas — same offset
-    if(data.fluessiggas===true)  cx(p2,[389.8, 332.7, 401.1, 344.2]);
-    else if(data.fluessiggas===false) cx(p2,[466.5, 332.6, 478.3, 344.3]);
+    // Flüssiggas
+    if(data.fluessiggas===true)  ck('Flüj');
+    else if(data.fluessiggas===false) ck('Flün');
 
-    // Anwohnerbenachrichtigung — same offset
-    const anwMap={
-      briefkasten:[66.2, 279.7, 77.7, 291.1],
-      amtsblatt:  [203.8, 279.6, 215.1, 291.0],
-      tagespresse:[321.1, 279.7, 332.5, 291.0],
-    };
-    if(anwMap[data.anwohner_benachrichtigung]) cx(p2,anwMap[data.anwohner_benachrichtigung]);
+    // Anwohnerbenachrichtigung
+    const anwMap={ briefkasten:'BenBr', amtsblatt:'BenAm', tagespresse:'BenTa' };
+    if(anwMap[data.anwohner_benachrichtigung]) ck(anwMap[data.anwohner_benachrichtigung]);
+
+    // gemeinnützig (auch im Antrag vorhanden: Feld gemnü)
+    if(data.gemeinnuetzig) ck('gemnü');
 
     return new Blob([await doc.save()],{type:'application/pdf'});
   } catch(e) { console.error('fillAntrag:',e.message); return makeFallback(data,'Antrag §29 StVO'); }
@@ -1204,16 +1221,11 @@ async function fillErklaerung(data) {
     // Datum und Unterschrift: [60.7, 41.7, 303.7, 66.7]
     dt((data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift, [60.7, 41.7, 303.7, 66.7], 9);
 
-    // gemeinnützig checkbox: rect=[461.2, 525.7, 472.4, 536.9] → center x=466.8, y=531.3
-    // draw X at center: x = 461.2 + (472.4-461.2)/2 - 3 = 462.4, y = 525.7 + (536.9-525.7)/2 - 3 = 527
+    // gemeinnützig — native Checkbox (eigene Appearance, immer mittig im Kästchen)
     console.log('gemeinnuetzig value:', data.gemeinnuetzig);
     if(data.gemeinnuetzig) {
-      try {
-        // gemeinnützig rect=[461.2,525.7,472.4,536.9], calibrated OX=-1 OY=+6
-        p2.drawLine({start:{x:461.2,y:531.7},end:{x:470.4,y:541.0},thickness:1.2,color:black});
-        p2.drawLine({start:{x:461.2,y:541.0},end:{x:470.4,y:531.7},thickness:1.2,color:black});
-        console.log('gemeinnuetzig X drawn');
-      } catch(e){ console.error('gemeinnuetzig error:',e.message); }
+      try { doc.getForm().getCheckBox('gemeinnützig').check(); console.log('gemeinnuetzig checked'); }
+      catch(e){ console.error('gemeinnuetzig error:',e.message); }
     }
 
     return new Blob([await doc.save()],{type:'application/pdf'});
