@@ -122,6 +122,11 @@ a.tag-office:hover { text-decoration: underline; }
 .tag-autofill:hover { background: var(--amber); color: white; border-color: var(--amber); }
 .noch-fehlt-box { border: 1.5px solid var(--ink); background: #fdfaf5; padding: 20px 22px; margin: 20px 0; }
 .noch-fehlt-box h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+.ablehnung-box { border: 1.5px solid #c0392b; background: #fdf3f2; padding: 20px 22px; margin: 20px 0; }
+.ablehnung-box h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: #c0392b; margin-bottom: 14px; }
+.ablehnung-item { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: #5a1a14; font-weight: 300; line-height: 1.6; margin-bottom: 8px; }
+.ablehnung-item:last-child { margin-bottom: 0; }
+.ablehnung-item::before { content: '⚠'; flex-shrink: 0; color: #c0392b; }
 .noch-item { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: var(--ink); margin-bottom: 8px; font-weight: 300; line-height: 1.5; }
 .noch-item:last-child { margin-bottom: 0; }
 .noch-item::before { content: '□'; font-family: 'IBM Plex Mono', monospace; color: var(--muted); flex-shrink: 0; }
@@ -242,8 +247,9 @@ a.tag-office:hover { text-decoration: underline; }
     <div class="p-dot" id="pd3"></div><div class="p-line" id="pl3"></div>
     <div class="p-dot" id="pd4"></div><div class="p-line" id="pl4"></div>
     <div class="p-dot" id="pd5"></div><div class="p-line" id="pl5"></div>
-    <div class="p-dot" id="pd6"></div>
-    <span class="p-label" id="pLabel">Schritt 1 von 6</span>
+    <div class="p-dot" id="pd6"></div><div class="p-line" id="pl6"></div>
+    <div class="p-dot" id="pd7"></div>
+    <span class="p-label" id="pLabel">Schritt 1 von 7</span>
   </div>
 
   <div class="sofort" id="sofort">
@@ -351,12 +357,25 @@ a.tag-office:hover { text-decoration: underline; }
   <!-- Q6 — GEÄNDERT: Formulierung präziser -->
   <div class="q-card" id="q6">
     <button class="back-btn" onclick="goQ('q5')">← Zurück</button>
-    <div class="q-step">Schritt 06 / 06 — Verkehr</div>
+    <div class="q-step">Schritt 06 / 07 — Verkehr</div>
     <div class="q-text">Sind für Ihre Veranstaltung Straßensperrungen, Halteverbote oder Umleitungen erforderlich?</div>
     <div class="q-hint">Z.B. Halteverbot, Straßensperrung oder Umleitung für die Veranstaltung.</div>
     <div class="opts">
       <button class="opt" onclick="pick(6,'ja')"><span class="o-icon">🚧</span><div><div class="o-label">Ja — Sperrung oder Halteverbot erforderlich</div></div></button>
       <button class="opt" onclick="pick(6,'nein')"><span class="o-icon">—</span><div><div class="o-label">Nein — kein Eingriff in den Verkehr</div></div></button>
+    </div>
+  </div>
+
+  <!-- Q7 — NEU: Barrierefreiheit -->
+  <div class="q-card" id="q7">
+    <button class="back-btn" onclick="goQ('q6')">← Zurück</button>
+    <div class="q-step">Schritt 07 / 07 — Barrierefreiheit</div>
+    <div class="q-text">Ist die Barrierefreiheit für Ihre Veranstaltung geplant?</div>
+    <div class="q-hint">Barrierefreiheit wird von den Behörden zunehmend geprüft und sollte frühzeitig berücksichtigt werden.</div>
+    <div class="opts">
+      <button class="opt" onclick="pick(7,'ja')"><span class="o-icon">♿</span><div><div class="o-label">Ja — barrierefrei geplant</div><div class="o-sub">Barrierefreie WCs, Kabelbrücken, Rollstuhlplätze</div></div></button>
+      <button class="opt" onclick="pick(7,'nein')"><span class="o-icon">⚠️</span><div><div class="o-label">Noch nicht geklärt</div><div class="o-sub">Barrierefreiheit wird derzeit geplant</div></div></button>
+      <button class="opt" onclick="pick(7,'unsure')"><span class="o-icon">❓</span><div><div class="o-label">Ich weiß nicht, welche Anforderungen gelten</div><div class="o-sub">Weitere Informationen erforderlich</div></div></button>
     </div>
   </div>
 
@@ -380,6 +399,7 @@ a.tag-office:hover { text-decoration: underline; }
       Die automatisch ausgefüllten Formulare sind zur Einreichung vorbereitet. Je nach Veranstaltung müssen weitere Nachweise beigefügt werden, z.&nbsp;B. Belegungsplan 1:500, Versicherungsnachweis, Prüfbuch oder MVAS-Nachweis.
     </div>
     <div class="cl-body" id="clBody"></div>
+    <div class="ablehnung-box" id="ablehnungBox" style="display:none;"></div>
     <div class="noch-fehlt-box" id="nochFehltBox"></div>
     <div class="tl-box" id="tlBox"></div>
     <div id="ctWrap"></div>
@@ -541,6 +561,9 @@ const SF = {
   musik:         [['Nachtruhe 22:00 Uhr','Musikdarbietungen müssen vor 22:00 Uhr enden.']],
   huepfburg:     [['Fliegender Bau','Hüpfburgen benötigen ein gültiges Prüfbuch.']],
   verkehr_ja:    [['MVAS-Nachweis erforderlich','Neu 2026: MVAS = Merkblatt über Rahmenbedingungen für erforderliche Fachkenntnisse zur Verkehrsabsicherung. Die verantwortliche Person braucht einen Schulungsnachweis.'],['Tiefbauamt ist zuständig','Adressat der verkehrsrechtlichen Anordnung.']],
+  barriere_ja:   [['Barrierefreiheit eingeplant','Barrierefreie WCs, Kabelbrücken und Rollstuhlplätze sind vorgesehen — bitte im Belegungsplan einzeichnen.'],['Gleichberechtigte Teilhabe','Die Behörde prüft, ob Menschen mit Behinderung gleichberechtigt teilnehmen können.']],
+  barriere_nein: [['Barrierefreiheit noch klären','Bitte vor der Antragstellung mit dem Bürgerservice Veranstaltungen abstimmen.'],['Häufig geprüft','Barrierefreiheit wird von den Behörden zunehmend berücksichtigt.']],
+  barriere_unsure:[['Was gehört zur Barrierefreiheit?','Häufig geprüft: barrierefreie WCs · rollstuhlgerechte Wege · Kabelbrücken · Stellplätze für Rollstuhlnutzende.'],['Bürgerservice Veranstaltungen','Stimmen Sie die konkreten Anforderungen frühzeitig mit dem Bürgerservice oder dem Veranstaltungsort ab.']],
 };
 
 function showSofort(key) {
@@ -574,6 +597,11 @@ function pick(step, val) {
     if (k) showSofort(k); else hideSofort(); goQ('q6');
   } else if (step === 6) {
     if (val === 'ja') showSofort('verkehr_ja'); else hideSofort();
+    goQ('q7');
+  } else if (step === 7) {
+    if (val === 'ja') showSofort('barriere_ja');
+    else if (val === 'nein') showSofort('barriere_nein');
+    else showSofort('barriere_unsure');
     setTimeout(() => buildChecklist(), 600);
   }
 }
@@ -585,11 +613,11 @@ function goQ(id) {
 }
 
 function setProgress(step) {
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 7; i++) {
     document.getElementById('pd'+i).className = i < step ? 'p-dot done' : i === step ? 'p-dot active' : 'p-dot';
-    if (i < 6) document.getElementById('pl'+i).className = i < step ? 'p-line done' : 'p-line';
+    if (i < 7) document.getElementById('pl'+i).className = i < step ? 'p-line done' : 'p-line';
   }
-  document.getElementById('pLabel').textContent = step < 6 ? `Schritt ${step+1} von 6` : 'Ergebnis';
+  document.getElementById('pLabel').textContent = step < 7 ? `Schritt ${step+1} von 7` : 'Ergebnis';
 }
 
 function buildChecklist() {
@@ -598,6 +626,7 @@ function buildChecklist() {
   const food = W[4]==='ja_alkohol' || W[4]==='ja_kein_alkohol';
   const alkohol = W[4]==='ja_alkohol';
   const aufbau = W[5], traffic = W[6]==='ja';
+  const barriere = W[7]; // 'ja', 'nein', 'unsure'
   const weeks = erstmal ? 12 : 8;
   const hasBuilds = aufbau==='buehne'||aufbau==='huepfburg';
   const hasMusik = aufbau==='musik'||aufbau==='buehne';
@@ -702,6 +731,28 @@ function buildChecklist() {
       dl:`ca. ${weeks} Wochen vorher`,of:'Tiefbauamt'});
   }
 
+  // Barrierefreiheit — NEU auf Basis Bärbel-Feedback
+  sec(cl,'Barrierefreiheit');
+  if(barriere === 'nein') {
+    ri(cl,{t:'⚠ Barrierefreiheit noch klären',
+      w:'Barrierefreiheit wird von den Behörden zunehmend geprüft und sollte frühzeitig berücksichtigt werden. Bitte vor der Antragstellung mit dem Bürgerservice Veranstaltungen abstimmen.',
+      dl:`ca. ${weeks} Wochen vorher — vor Antragstellung`,of:'Bürgerservice Veranstaltungen',warn:true});
+  }
+  if(barriere === 'unsure') {
+    ri(cl,{t:'ℹ Was bedeutet Barrierefreiheit bei Veranstaltungen?',
+      w:'Bitte prüfen Sie insbesondere: barrierefreie WCs · rollstuhlgerechte Wege · Kabelbrücken über Leitungen · Stellplätze für Rollstuhlnutzende. Bei Unsicherheit wenden Sie sich an den Bürgerservice Veranstaltungen oder stimmen Sie die Anforderungen mit dem Veranstaltungsort ab.',
+      dl:`ca. ${weeks} Wochen vorher — Anforderungen erfragen`,of:'Bürgerservice Veranstaltungen',warn:true});
+  }
+  ri(cl,{t:'Barrierefreie WC-Anlage',
+    w:'Mindestens eine barrierefreie Toilette muss vorhanden und gut erreichbar sein. Bitte im Belegungsplan einzeichnen.',
+    dl:'Im Belegungsplan einzeichnen',of:barriere==='ja'?'Eingeplant':'⚠ Noch zu klären'});
+  ri(cl,{t:'Kabelbrücken für Rollstühle',
+    w:'Kabel auf dem Boden müssen mit überfahrbaren Kabelbrücken abgedeckt sein, damit Rollstuhlfahrer sicher passieren können.',
+    dl:'Ab Aufbau sicherstellen',of:barriere==='ja'?'Eingeplant':'⚠ Noch zu planen'});
+  ri(cl,{t:'Rollstuhlstellplätze einplanen',
+    w:'Stellplätze für Rollstuhlfahrer müssen ausreichend breit, eben und nahe an Bühne oder Hauptbereich sein. Im Belegungsplan ausweisen.',
+    dl:'Im Belegungsplan einzeichnen',of:barriere==='ja'?'Eingeplant':'⚠ Noch zu klären'});
+
   const nochFehlt = [
     'Belegungsplan 1:500',
     'Versicherungsnachweis',
@@ -711,11 +762,28 @@ function buildChecklist() {
     veryBig ? 'Sicherheitskonzept' : null,
     food ? 'Anzeige LGastG (pro Stand)' : null,
     alkohol ? 'Gaststättenrechtliche Gestattung prüfen' : null,
+    barriere === 'nein' ? 'Barrierefreiheit klären (WC, Kabelbrücken, Rollstuhlplätze)' : null,
+    barriere === 'unsure' ? 'Anforderungen zur Barrierefreiheit erfragen (Bürgerservice Veranstaltungen)' : null,
   ].filter(Boolean);
 
   document.getElementById('nochFehltBox').innerHTML =
     '<h3>Noch nicht automatisch erstellt</h3>' +
     nochFehlt.map(i => `<div class="noch-item">${i}</div>`).join('');
+
+  // Häufige Ablehnungsgründe — direkt aus Bärbel-Feedback
+  const ablehnItems = [
+    ['Fluchtwege nicht freigehalten', 'Rettungswege und Feuergassen müssen mind. 5 m breit und dauerhaft zugänglich sein — auch während der Veranstaltung.'],
+    ['Feuergassen fehlen oder zu schmal', 'Die Feuerwehr muss jederzeit mit Fahrzeugen durchfahren können. Im Belegungsplan einzeichnen und freihalten.'],
+    ['Hygiene-Auflagen nicht erfüllt', 'Für Gastro-Stände: festes Dach, abwaschbare Böden, Kühlmöglichkeit, Handwaschgelegenheit — Lebensmittelkontrolle kann vorbeikommen.'],
+    ['Lautstärke / Nachtruhe missachtet', 'Musik muss vor 22:00 Uhr enden. In geschlossenen Zelten bis 23:00 — nur mit ausdrücklicher Genehmigung. Sonntags keine Lärmaktionen 9–11 Uhr.'],
+    ['Barrierefreiheit nicht berücksichtigt', 'Barrierefreie WCs, Rollstuhlplätze und rollstuhlgerechte Wege werden zunehmend geprüft und können Einfluss auf die Genehmigung haben.'],
+  ];
+  const ab = document.getElementById('ablehnungBox');
+  ab.style.display = 'block';
+  ab.innerHTML = '<h3>⚠ Häufige Rückfragen der Behörden</h3>' +
+    ablehnItems.map(([titel, text]) =>
+      `<div class="ablehnung-item"><span><strong>${titel}</strong> — ${text}</span></div>`
+    ).join('');
 
   // Timeline — GEÄNDERT: Zeitangaben korrigiert
   const tl = document.getElementById('tlBox');
@@ -736,13 +804,13 @@ function buildChecklist() {
     '<div style="margin-top:20px;font-family:\'IBM Plex Mono\',monospace;font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Kontakte</div>' +
     '<div class="ct-wrap">'+contacts.map(c=>`<div class="ct-card"><div class="ct-name">${c.n}</div><div class="ct-detail">${c.d.replace(/\n/g,'<br>')}</div></div>`).join('')+'</div>';
 
-  for(let i=1;i<=6;i++) document.getElementById('pd'+i).className='p-dot done';
-  for(let i=1;i<=5;i++) document.getElementById('pl'+i).className='p-line done';
+  for(let i=1;i<=7;i++) document.getElementById('pd'+i).className='p-dot done';
+  for(let i=1;i<=6;i++) document.getElementById('pl'+i).className='p-line done';
   document.getElementById('pLabel').textContent = 'Fertig ✓';
   document.getElementById('phaseTab1').classList.add('done');
 
   // Store checklist data for PDF paket
-  window._paketData = { ort, besucher, erstmal, food, alkohol, aufbau, traffic, weeks, hasBuilds, hasMusik, bigEvent, veryBig, ortLabel, bLabel, nochFehlt };
+  window._paketData = { ort, besucher, erstmal, food, alkohol, aufbau, traffic, barriere, weeks, hasBuilds, hasMusik, bigEvent, veryBig, ortLabel, bLabel, nochFehlt };
   document.getElementById('pdfPaketBox').style.display = 'block';
 
   goQ('resultWrap');
@@ -1010,113 +1078,143 @@ function crc32(data){
 }
 
 async function fillAntrag(data) {
-  const {PDFDocument,StandardFonts}=PDFLib;
+  const {PDFDocument,rgb}=PDFLib;
   try {
     const bin=atob(ANTRAG_PDF_B64);
     const arr=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
     const doc=await PDFDocument.load(arr.buffer,{ignoreEncryption:true});
-    const form=doc.getForm();
-    // Helvetica (WinAnsi) covers German umlauts; used to regenerate field appearances.
-    const helv=await doc.embedFont(StandardFonts.Helvetica);
+    let font;
+    try {
+      const fB=await fetch('NotoSans-Regular.ttf').then(r=>r.arrayBuffer());
+      font=await doc.embedFont(fB);
+    } catch(e) { const {StandardFonts}=PDFLib; font=await doc.embedFont(StandardFonts.Helvetica); }
+    const black=rgb(0,0,0);
+    // pages[0] = Name der Veranstaltung, Institution, dates
+    // pages[1] = Garnituren checkboxes, Flüssiggas, Anwohner
+    const p1=doc.getPages()[0]; const p2=doc.getPages()[1];
 
-    // setT: fill a named text field, tolerant of missing/renamed fields
-    const setT=(name,value)=>{
-      if(value==null||value==='') return;
-      try { form.getTextField(name).setText(String(value)); } catch(e){}
+    // dt: draw text centered vertically in field rect [x1,y1,x2,y2]
+    const dt=(page,text,rect,sz)=>{
+      if(!text) return;
+      const s=sz||10; const y=rect[1]+(rect[3]-rect[1]-s)/2+1;
+      try { page.drawText(String(text),{x:rect[0]+2,y,size:s,font,color:black,maxWidth:rect[2]-rect[0]-4}); } catch(e){}
     };
-    // setC: check a named checkbox field
-    const setC=(name)=>{
-      try { form.getCheckBox(name).check(); } catch(e){}
+    // cx: draw X centered in checkbox rect [x1,y1,x2,y2]
+    const cx=(page,rect)=>{
+      // Draw X using two crossing lines — no font needed
+      const x1=rect[0]+1, y1=rect[1]+1, x2=rect[2]-1, y2=rect[3]-1;
+      try {
+        page.drawLine({start:{x:x1,y:y1},end:{x:x2,y:y2},thickness:1.2,color:black});
+        page.drawLine({start:{x:x1,y:y2},end:{x:x2,y:y1},thickness:1.2,color:black});
+      } catch(e){ console.error('cx error:',e.message); }
     };
 
-    // ---- Text fields (real AcroForm field names) ----
-    setT('NameVer',     data.veranstaltungsname);
-    setT('NameInst',    data.institution);
-    setT('Anschrift',   data.anschrift);
-    setT('AnsprNam',    data.ansprech_name);
-    setT('AnsprTelp',   data.ansprech_tel);
-    setT('AnsprTelM',   data.ansprech_mobil);
-    setT('AnsprNamEM',  data.ansprech_email);
-    // Verantwortliche(r) Leiter/-in am Veranstaltungstag (reuse Ansprechpartner)
-    setT('VerantNam',   data.ansprech_name);
-    setT('VerantTelp',  data.ansprech_tel);
-    setT('VerantwTelM', data.ansprech_mobil);
-    setT('AufDat',      data.aufbau_datum);
-    setT('UhrAuf',      data.aufbau_uhrzeit);
-    setT('VerDat',      data.veranstaltung_datum);
-    setT('VerUhrAuf',   data.veranstaltung_uhrzeit);
-    setT('MusUhr',      data.musik_uhrzeit);
-    setT('EndAus',      data.ausschank_ende);
-    setT('AbDat',       data.abbau_datum);
-    setT('Abuhr',       data.abbau_uhrzeit);
-    setT('gleichzanw',  data.besucher_gleichzeitig);
-    setT('gesamtanw',   data.besucher_gesamt);
-    setT('AngaOrt',     data.ort_beschreibung);
-    setT('DatUnt',      (data.ort_stadt||'Stuttgart')+', '+(data.datum_unterschrift||''));
+    // PAGE 1 — exact rects from pdf-lib annotation inspection
+    dt(p1,data.veranstaltungsname,   [70.4, 601.9, 565.6, 619.4]);
+    dt(p1,data.institution,          [70.0, 560.5, 466.1, 578.0]);
+    dt(p1,data.anschrift,            [70.0, 529.3, 565.3, 550.4]);
+    dt(p1,data.ansprech_name,        [70.0, 487.9, 565.3, 508.9]);
+    dt(p1,data.ansprech_tel,         [70.0, 459.1, 302.5, 478.2], 9);
+    dt(p1,data.ansprech_mobil,       [70.4, 429.5, 302.9, 448.6], 9);
+    dt(p1,data.ansprech_email,       [70.6, 397.9, 565.9, 418.6]);
+    dt(p1,data.ansprech_name,        [70.8, 355.9, 566.1, 375.8]); // Verantw. Leiter
+    dt(p1,data.ansprech_tel,         [70.6, 326.5, 303.1, 346.4], 9);
+    dt(p1,data.ansprech_mobil,       [70.4, 296.9, 303.0, 316.0], 9);
+    dt(p1,data.aufbau_datum,         [68.2, 209.0, 195.2, 229.4], 9);
+    dt(p1,data.aufbau_uhrzeit,       [195.8, 209.0, 303.7, 229.4], 9);
+    dt(p1,data.veranstaltung_datum,  [68.2, 179.2, 192.9, 196.6], 9);
+    dt(p1,data.veranstaltung_uhrzeit,[195.8, 179.4, 303.7, 199.8], 9);
+    dt(p1,data.musik_uhrzeit,        [304.2, 179.4, 449.7, 199.8], 9);
+    dt(p1,data.ausschank_ende,       [453.9, 179.2, 567.9, 199.6], 9);
+    dt(p1,data.abbau_datum,          [68.2, 108.4, 192.5, 128.8], 9);
+    dt(p1,data.abbau_uhrzeit,        [195.8, 108.2, 303.7, 128.6], 9);
+    dt(p1,data.besucher_gleichzeitig,[368.5, 85.1, 436.4, 102.5], 9);
+    dt(p1,data.besucher_gesamt,      [491.8, 85.0, 559.7, 102.3], 9);
 
-    // ---- Checkbox fields ----
-    if(data.gemeinnuetzig) setC('gemnü');
+    // PAGE 2 — text fields
+    dt(p2,data.ort_beschreibung,     [68.3, 744.0, 565.9, 775.8]);
+    dt(p2,(data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift, [68.8, 160.4, 232.1, 180.8], 9);
 
-    // Verkehrsfläche
-    if(data.ort_typ==='strasse')          setC('Strfl');
-    else if(data.ort_typ==='fussgaenger') setC('Fußg');
-    else if(data.ort_typ==='gehweg')      setC('Gehw');
+    // Verkehrsfläche checkboxes
+    if(data.ort_typ==='strasse')     cx(p2,[67.0, 715.7, 78.8, 727.5]);
+    else if(data.ort_typ==='fussgaenger') cx(p2,[204.6, 715.9, 216.3, 727.6]);
+    else if(data.ort_typ==='gehweg') cx(p2,[321.9, 715.7, 333.6, 727.7]);
 
-    // Flächenbelegung — wizard key -> field name (incl. Ausstellungsfläche)
+    // Aufbau checkboxes — calibrated: annotation rect + offset(x-2, y+12)
     const cbMap={
-      garnituren:'Garn', verkaufsstaende:'Verk', zelte:'ZelPav', buehne:'Bühne',
-      karussell:'KarFahr', ausstellung:'Ausst', huepfburg:'Hüpf',
-      spielstrasse:'Spiel', tiere:'Tier',
+      garnituren:   [66.2, 679.7, 77.9, 691.4],
+      verkaufsstaende:[203.5, 679.7, 215.3, 691.4],
+      zelte:        [320.9, 680.7, 332.7, 692.4],
+      buehne:       [424.6, 680.6, 436.4, 692.4],
+      karussell:    [66.1, 661.6, 77.9, 673.5],
+      huepfburg:    [320.9, 662.6, 332.8, 674.4],
+      spielstrasse: [424.6, 662.7, 436.5, 674.4],
+      tiere:        [66.1, 643.7, 77.9, 655.4],
     };
-    (data.aufbauten||[]).forEach(k=>{ if(cbMap[k]) setC(cbMap[k]); });
+    (data.aufbauten||[]).forEach(k=>{if(cbMap[k])cx(p2,cbMap[k]);});
 
-    // Flüssiggas
-    if(data.fluessiggas===true)       setC('Flüj');
-    else if(data.fluessiggas===false) setC('Flün');
+    // Flüssiggas — same offset
+    if(data.fluessiggas===true)  cx(p2,[389.8, 332.7, 401.1, 344.2]);
+    else if(data.fluessiggas===false) cx(p2,[466.5, 332.6, 478.3, 344.3]);
 
-    // Anwohnerbenachrichtigung
-    const anwMap={briefkasten:'BenBr', amtsblatt:'BenAm', tagespresse:'BenTa'};
-    if(anwMap[data.anwohner_benachrichtigung]) setC(anwMap[data.anwohner_benachrichtigung]);
-
-    // Regenerate appearances with an embedded font, then flatten so the
-    // result renders identically in every viewer (Acrobat, Preview, browser).
-    try { form.updateFieldAppearances(helv); } catch(e){}
-    try { form.flatten(); }
-    catch(e){ try { form.acroForm.dict.set(PDFLib.PDFName.of("NeedAppearances"), PDFLib.PDFBool.True); } catch(_){} }
+    // Anwohnerbenachrichtigung — same offset
+    const anwMap={
+      briefkasten:[66.2, 279.7, 77.7, 291.1],
+      amtsblatt:  [203.8, 279.6, 215.1, 291.0],
+      tagespresse:[321.1, 279.7, 332.5, 291.0],
+    };
+    if(anwMap[data.anwohner_benachrichtigung]) cx(p2,anwMap[data.anwohner_benachrichtigung]);
 
     return new Blob([await doc.save()],{type:'application/pdf'});
   } catch(e) { console.error('fillAntrag:',e.message); return makeFallback(data,'Antrag §29 StVO'); }
 }
 
 async function fillErklaerung(data) {
-  const {PDFDocument,StandardFonts}=PDFLib;
+  const {PDFDocument,rgb}=PDFLib;
   try {
     const bin=atob(ERKL_PDF_B64);
     const arr=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
     const doc=await PDFDocument.load(arr.buffer,{ignoreEncryption:true});
-    const form=doc.getForm();
-    const helv=await doc.embedFont(StandardFonts.Helvetica);
+    let font;
+    try {
+      const fB=await fetch('NotoSans-Regular.ttf').then(r=>r.arrayBuffer());
+      font=await doc.embedFont(fB);
+    } catch(e) { const {StandardFonts}=PDFLib; font=await doc.embedFont(StandardFonts.Helvetica); }
+    const black=rgb(0,0,0);
+    const p2=doc.getPages()[1]; // form is on page 2
 
-    const setT=(name,value)=>{
-      if(value==null||value==='') return;
-      try { form.getTextField(name).setText(String(value)); } catch(e){}
+    // Helper: draw text centered vertically in field rect [x1,y1,x2,y2]
+    const dt=(text,rect,sz)=>{
+      if(!text) return;
+      const s=sz||10; const y=rect[1]+(rect[3]-rect[1]-s)/2+1;
+      try { p2.drawText(String(text),{x:rect[0]+2,y,size:s,font,color:black,maxWidth:rect[2]-rect[0]-4}); } catch(e){}
     };
 
-    // Text fields (real AcroForm field names on the Erklärung)
-    setT('Name der Veranstaltung', data.veranstaltungsname);
-    setT('BeaInst',                data.institution);
-    setT('Anschrift Straße Hausnummer Postleitzahl Ort', data.anschrift);
-    setT('Ansprechpartnerin Zuname Vorname',             data.ansprech_name);
-    setT('Datum und Unterschrift', (data.ort_stadt||'Stuttgart')+', '+(data.datum_unterschrift||''));
+    // Exact field rects from pdf-lib annotation inspection:
+    // unnamed (Name der Veranstaltung): [60.4, 566.3, 556.2, 589.2] → y=571.8
+    dt(data.veranstaltungsname,   [60.4, 566.3, 556.2, 589.2]);
+    // BeaInst: [60.4, 514.9, 450.4, 537.7] → y=522.3
+    dt(data.institution,          [60.4, 514.9, 450.4, 537.7]);
+    // Anschrift: [60.4, 475.2, 556.2, 498.0]
+    dt(data.anschrift,            [60.4, 475.2, 556.2, 498.0]);
+    // Ansprechpartnerin: [60.4, 424.6, 555.7, 447.4]
+    dt(data.ansprech_name,        [60.4, 424.6, 555.7, 447.4]);
+    // Datum und Unterschrift: [60.7, 41.7, 303.7, 66.7]
+    dt((data.ort_stadt||'Stuttgart')+', '+data.datum_unterschrift, [60.7, 41.7, 303.7, 66.7], 9);
 
-    // gemeinnützig checkbox — on-state is "On" here (not "Ja")
-    if(data.gemeinnuetzig){ try { form.getCheckBox('gemeinnützig').check(); } catch(e){} }
-
-    try { form.updateFieldAppearances(helv); } catch(e){}
-    try { form.flatten(); }
-    catch(e){ try { form.acroForm.dict.set(PDFLib.PDFName.of("NeedAppearances"), PDFLib.PDFBool.True); } catch(_){} }
+    // gemeinnützig checkbox: rect=[461.2, 525.7, 472.4, 536.9] → center x=466.8, y=531.3
+    // draw X at center: x = 461.2 + (472.4-461.2)/2 - 3 = 462.4, y = 525.7 + (536.9-525.7)/2 - 3 = 527
+    console.log('gemeinnuetzig value:', data.gemeinnuetzig);
+    if(data.gemeinnuetzig) {
+      try {
+        // gemeinnützig rect=[461.2,525.7,472.4,536.9], calibrated OX=-1 OY=+6
+        p2.drawLine({start:{x:461.2,y:531.7},end:{x:470.4,y:541.0},thickness:1.2,color:black});
+        p2.drawLine({start:{x:461.2,y:541.0},end:{x:470.4,y:531.7},thickness:1.2,color:black});
+        console.log('gemeinnuetzig X drawn');
+      } catch(e){ console.error('gemeinnuetzig error:',e.message); }
+    }
 
     return new Blob([await doc.save()],{type:'application/pdf'});
   } catch(e) { console.error('fillErklaerung:',e.message); return makeFallback(data,'Veranstaltererklärung §29 StVO'); }
