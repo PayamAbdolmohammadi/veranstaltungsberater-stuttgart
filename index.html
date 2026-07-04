@@ -225,6 +225,16 @@ a.tag-office:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
+<div id="wf-rolebar"><div class="wf-rolebar-inner">
+  <span class="wf-brand"><span class="wf-dot"></span>Veranstaltungsportal Stuttgart</span>
+  <div class="wf-tabs" role="tablist">
+    <button class="wf-tab wf-active" id="wf-tab-veranstalter" onclick="wf_setRolle('veranstalter')">Veranstalter</button>
+    <button class="wf-tab" id="wf-tab-afoeo" onclick="wf_setRolle('afoeo')">Amt f&uuml;r &ouml;ffentliche Ordnung</button>
+    <button class="wf-tab" id="wf-tab-fachamt" onclick="wf_setRolle('fachamt')">Fachamt</button>
+  </div>
+  <span class="wf-phase" id="wf-phase">Demo &middot; &sect;29 StVO</span>
+  <button class="wf-reset" onclick="wf_reset()">&#8634; Reset</button>
+</div></div>
 
 <header class="site-header">
   <div class="header-inner">
@@ -389,15 +399,6 @@ a.tag-office:hover { text-decoration: underline; }
       Diese Liste ersetzt keine Genehmigung. Sie zeigt, welche Unterlagen Sie voraussichtlich vorbereiten müssen.
     </div>
     <div class="mappe" id="mappe"></div>
-    <div class="formulare-cta">
-      <div class="cta-text">
-        <h3>Amtliche Formulare erstellen</h3>
-        <p>Die amtlichen Formulare werden automatisch ausgefüllt und sind zur Einreichung bei den zuständigen Behörden vorbereitet.</p>
-        <p>Fehlende Nachweise werden separat angezeigt.</p>
-        <p class="cta-note">Die ausgefüllten Formulare müssen noch unterschrieben und zusammen mit den erforderlichen Nachweisen eingereicht werden. Dies ersetzt keine Genehmigung.</p>
-      </div>
-      <button class="cta-btn" onclick="goToFormulare()">Amtliche Formulare erstellen →</button>
-    </div>
     <div class="hinweis-box">
       <strong>Hinweis</strong><br>
       Die automatisch ausgefüllten Formulare sind zur Einreichung vorbereitet. Je nach Veranstaltung müssen weitere Nachweise beigefügt werden, z.&nbsp;B. Belegungsplan 1:500, Versicherungsnachweis, Prüfbuch oder MVAS-Nachweis.
@@ -417,6 +418,7 @@ a.tag-office:hover { text-decoration: underline; }
         <button class="pp-btn-main" onclick="goToFormulare()">Vollständiges Paket erstellen →</button>
         <div class="pp-sub">Schritt 1: Angaben eingeben · Schritt 2: Download aller Dokumente</div>
       </div>
+      <p class="cta-note" style="margin-top:12px;">Die ausgefüllten Formulare müssen noch unterschrieben und zusammen mit den erforderlichen Nachweisen eingereicht werden. Dies ersetzt keine Genehmigung.</p>
     </div>
 
     <div class="formulare-cta" style="border-color:var(--green);margin-top:4px;">
@@ -547,6 +549,7 @@ a.tag-office:hover { text-decoration: underline; }
       </div>
     </div>
     <button class="restart-btn" style="margin-top:20px;" onclick="restart()">↩ Neue Veranstaltung planen</button>
+    <div id="wf-veranstalter-status"></div>
   </div>
 </div>
 
@@ -636,6 +639,7 @@ a.tag-office:hover { text-decoration: underline; }
   </div>
 
   <div class="bdg-actions">
+    <button class="bdg-btn" style="background:#C8490A" onclick="wf_budgetUebernehmen()">Budget übernehmen &amp; zum Antrag →</button>
     <button class="bdg-btn bdg-btn-pdf" onclick="bdgExportPDF()">Als PDF speichern</button>
     <button class="bdg-btn" onclick="bdgExportCSV()">Als CSV (Excel)</button>
     <button class="bdg-btn bdg-btn-ghost" onclick="bdgReset()">Zurücksetzen</button>
@@ -665,7 +669,7 @@ const SF = {
   buehne:        [['Bühne oder Zelt geplant','Je nach Größe und Konstruktion können ein Prüfbuch oder weitere statische Nachweise erforderlich sein.'],['Frühzeitig klären','Das Baurechtsamt informiert, welche Unterlagen benötigt werden und ob eine Abnahme vor Ort nötig ist.']],
   musik:         [['Nachtruhe 22:00 Uhr','Musikdarbietungen müssen vor 22:00 Uhr enden.']],
   huepfburg:     [['Fliegender Bau','Hüpfburgen benötigen ein gültiges Prüfbuch.']],
-  verkehr_ja:    [['MVAS-Nachweis erforderlich','Neu 2026: MVAS = Merkblatt über Rahmenbedingungen für erforderliche Fachkenntnisse zur Verkehrsabsicherung. Die verantwortliche Person braucht einen Schulungsnachweis.'],['Tiefbauamt ist zuständig','Adressat der verkehrsrechtlichen Anordnung.']],
+  verkehr_ja:    [['MVAS-Nachweis erforderlich','Neu 2026: MVAS = Merkblatt über Rahmenbedingungen für erforderliche Fachkenntnisse zur Verkehrsabsicherung. Die verantwortliche Person braucht einen Schulungsnachweis.'],['Amt für öffentliche Ordnung ist zuständig','Adressat der verkehrsrechtlichen Anordnung ist das AföO — nicht das Tiefbauamt. Die Beschilderung übernimmt eine beauftragte Fachfirma.']],
   barriere_ja:   [['Barrierefreiheit eingeplant','Barrierefreie WCs, Kabelbrücken und Rollstuhlplätze sind vorgesehen — bitte im Belegungsplan einzeichnen.'],['Gleichberechtigte Teilhabe','Die Behörde prüft, ob Menschen mit Behinderung gleichberechtigt teilnehmen können.']],
   barriere_nein: [['Barrierefreiheit noch klären','Bitte vor der Antragstellung mit dem Bürgerservice Veranstaltungen abstimmen.'],['Häufig geprüft','Barrierefreiheit wird von den Behörden zunehmend berücksichtigt.']],
   barriere_unsure:[['Was gehört zur Barrierefreiheit?','Häufig geprüft: barrierefreie WCs · rollstuhlgerechte Wege · Kabelbrücken · Stellplätze für Rollstuhlnutzende.'],['Bürgerservice Veranstaltungen','Stimmen Sie die konkreten Anforderungen frühzeitig mit dem Bürgerservice oder dem Veranstaltungsort ab.']],
@@ -824,6 +828,9 @@ function buildChecklist() {
     ri(cl,{t:'Nachtruhe ab 22:00 Uhr',
       w:'Musik muss vor 22:00 enden. In geschlossenen Zelten bis 23:00 — nur mit ausdrücklicher Genehmigung.',
       dl:'Gilt während der Veranstaltung',of:''});
+    ri(cl,{t:'GEMA-Anmeldung',
+      w:'Für öffentlich wiedergegebene Musik (live oder ab Tonträger) fallen in der Regel GEMA-Gebühren an. Die Anmeldung macht der Veranstalter selbst — direkt bei der GEMA, nicht über die Stadt.',
+      dl:'Vor der Veranstaltung',of:'GEMA'});
   }
 
   if(traffic) {
@@ -832,8 +839,8 @@ function buildChecklist() {
       w:'MVAS steht für „Merkblatt über Rahmenbedingungen für erforderliche Fachkenntnisse zur Verkehrsabsicherung von Arbeitsstellen an Straßen". Die verantwortliche Person muss einen Schulungsnachweis vorlegen.',
       dl:`ca. ${weeks} Wochen vorher`,of:'Tiefbauamt',isNew:true});
     ri(cl,{t:'Verkehrsrechtliche Anordnung (§§45, 46 StVO)',
-      w:'Jede Sperrung und jedes Halteverbot muss amtlich angeordnet werden. Die Umsetzung übernehmen Sie oder eine Fachfirma. Fachfirma spart 15% Verwaltungsgebühr.',
-      dl:`ca. ${weeks} Wochen vorher`,of:'Tiefbauamt'});
+      w:'Jede Sperrung und jedes Halteverbot muss amtlich angeordnet werden — die Anordnung kommt vom Amt für öffentliche Ordnung (nicht vom Tiefbauamt). Die Beschilderung setzt eine beauftragte Fachfirma um; eine Fachfirma spart 15% Verwaltungsgebühr.',
+      dl:`ca. ${weeks} Wochen vorher`,of:'Amt für öffentliche Ordnung'});
   }
 
   // Barrierefreiheit — NEU auf Basis Bärbel-Feedback
@@ -1138,11 +1145,12 @@ async function buildChecklistePDF() {
   if(hasMusik){
     secHead('Musik & Lärm');
     chkItem('Musikzeiten im Antrag angeben','Sonntags keine Lärmaktionen 9-11 Uhr. Nachtruhe ab 22:00 - in Zelten bis 23:00 mit Genehmigung.','Im Antrag angeben','Bürgerservice Veranstaltungen');
+    chkItem('GEMA-Anmeldung','Für öffentlich wiedergegebene Musik (live oder ab Tonträger) fallen i.d.R. GEMA-Gebühren an. Anmeldung durch den Veranstalter direkt bei der GEMA.','Vor der Veranstaltung','GEMA');
   }
   if(traffic){
     secHead('Verkehrsmaßnahmen');
     chkItem('MVAS-Schulungsnachweis','Merkblatt über Rahmenbedingungen für Fachkenntnisse zur Verkehrsabsicherung.','ca. '+weeks+' Wochen vorher','Tiefbauamt');
-    chkItem('Verkehrsrechtliche Anordnung §§45, 46 StVO','Jede Sperrung amtlich anordnen. Fachfirma spart 15% Verwaltungsgebühr.','ca. '+weeks+' Wochen vorher','Tiefbauamt');
+    chkItem('Verkehrsrechtliche Anordnung §§45, 46 StVO','Jede Sperrung amtlich anordnen. Die Anordnung kommt vom Amt für öffentliche Ordnung; die Beschilderung setzt eine Fachfirma um (spart 15% Verwaltungsgebühr).','ca. '+weeks+' Wochen vorher','Amt für öffentliche Ordnung');
   }
   // Barrierefreiheit — immer (Inhalt variiert je nach Antwort), inhaltsgleich zur Beratungsseite
   secHead('Barrierefreiheit');
@@ -1569,7 +1577,7 @@ function bdgExportCSV(){
   }).join(sep)).join('\r\n');
   dl(new Blob([csv],{type:'text/csv;charset=utf-8;'}), 'Budgetplan_Stuttgart.csv');
 }
-async function bdgExportPDF(){
+async function bdgExportPDF(suppressDownload){
   const {PDFDocument,rgb,StandardFonts}=PDFLib;
   const doc=await PDFDocument.create();
   let fontR,fontB,uni=true;
@@ -1643,10 +1651,463 @@ async function bdgExportPDF(){
   T('Saldo gesamt',ML+12,y-12,11,fontB,ink); RT(bdgFmt(c.saldoG),MR-12,y-12,13,fontB, c.saldoG>=0?green:red2);
   T('Saldo (nur bestätigte Einnahmen)',ML+12,y-32,10,fontR,muted); RT(bdgFmt(c.saldoB),MR-12,y-32,11,fontB, c.saldoB>=0?green:red2);
   const bytes=await doc.save();
-  dl(new Blob([bytes],{type:'application/pdf'}), 'Budgetplan_Stuttgart.pdf');
+  const _blob=new Blob([bytes],{type:'application/pdf'});
+  if(!suppressDownload) dl(_blob, 'Budgetplan_Stuttgart.pdf');
+  return _blob;
 }
 /* =================== Ende Budget- & Finanzierungsplan =================== */
 
+</script>
+
+<div id="wf-afoeo" class="wf-overlay"><div class="wf-overlay-inner"></div></div>
+<div id="wf-fachamt" class="wf-overlay"><div class="wf-overlay-inner"></div></div>
+<div id="wf-bescheid"></div>
+
+<style id="wf-style">
+#wf-rolebar{position:sticky;top:0;z-index:40;background:#1A1814;color:#fff;font-family:'Inter',system-ui,sans-serif;}
+.wf-rolebar-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 16px;}
+.wf-brand{font-size:12px;font-weight:600;letter-spacing:.04em;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.9);}
+.wf-dot{width:8px;height:8px;border-radius:50%;background:#C8490A;}
+.wf-tabs{display:flex;gap:3px;flex-wrap:wrap;}
+.wf-tab{appearance:none;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,.6);font-family:inherit;font-size:13px;font-weight:500;padding:7px 13px;border-radius:7px;}
+.wf-tab:hover{color:#fff;background:rgba(255,255,255,.08);}
+.wf-tab.wf-active{background:#F7F6F3;color:#1A1814;font-weight:600;}
+.wf-phase{margin-left:auto;font-size:11px;color:rgba(255,255,255,.5);}
+.wf-reset{appearance:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:5px 10px;}
+.wf-reset:hover{background:rgba(255,255,255,.16);color:#fff;}
+
+.wf-overlay{display:none;position:fixed;left:0;right:0;top:0;bottom:0;background:#F7F6F3;z-index:30;overflow-y:auto;padding:64px 0 80px;}
+.wf-overlay.wf-show{display:block;}
+.wf-overlay-inner{max-width:880px;margin:0 auto;padding:24px 20px;font-family:'Inter',system-ui,sans-serif;color:#1A1814;}
+
+.wf-eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.wf-h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:28px;line-height:1.1;margin-bottom:6px;}
+.wf-sub{color:#6B6358;font-size:15px;margin-bottom:24px;max-width:60ch;}
+.wf-accent{height:3px;border-radius:3px;width:54px;margin-bottom:18px;}
+.wf-card{background:#fff;border:1px solid #E7E3DB;border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+.wf-card-label{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6B6358;margin-bottom:12px;}
+.wf-empty{border:1px dashed #E7E3DB;border-radius:14px;padding:30px 24px;text-align:center;color:#6B6358;font-size:15px;}
+.wf-empty strong{color:#1A1814;display:block;margin-bottom:4px;font-size:16px;}
+.wf-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #EFECE6;}
+.wf-row:last-child{border-bottom:none;}
+.wf-k{color:#6B6358;font-size:14px;}
+.wf-v{font-weight:600;font-size:14px;text-align:right;}
+.wf-group{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#C8490A;margin:18px 0 4px;}
+.wf-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 11px;border-radius:999px;}
+.wf-pill-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+.wf-pill-neutral{background:#F0EEE9;color:#6B6358;}
+.wf-pill-blue{background:rgba(59,91,165,.12);color:#3B5BA5;}
+.wf-pill-green{background:rgba(45,106,79,.12);color:#2D6A4F;}
+.wf-pill-warm{background:rgba(200,73,10,.12);color:#C8490A;}
+.wf-btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+.wf-btn{appearance:none;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;padding:10px 16px;border-radius:9px;background:#1A1814;color:#fff;}
+.wf-btn:hover{opacity:.9;}
+.wf-btn-sm{padding:8px 13px;font-size:13px;}
+.wf-btn-ghost{background:transparent;color:#1A1814;border:1px solid #E7E3DB;}
+.wf-btn-warm{background:#C8490A;}
+.wf-btn-green{background:#2D6A4F;}
+.wf-btn-danger{background:#A33A2B;}
+.wf-check{display:flex;align-items:center;gap:10px;border:1px solid #E7E3DB;border-radius:9px;padding:10px 13px;font-size:14px;cursor:pointer;background:#fff;margin-bottom:8px;}
+.wf-check input{accent-color:#C8490A;width:17px;height:17px;}
+.wf-field label{display:block;font-size:13px;font-weight:600;color:#6B6358;margin-bottom:6px;}
+.wf-field textarea{width:100%;padding:11px 13px;border:1px solid #E7E3DB;border-radius:9px;font-family:inherit;font-size:15px;min-height:70px;resize:vertical;}
+.wf-toast{background:rgba(45,106,79,.10);border:1px solid rgba(45,106,79,.25);color:#2D6A4F;border-radius:11px;padding:13px 16px;font-size:14px;font-weight:500;margin-bottom:16px;}
+.wf-amt{border:1px solid #E7E3DB;border-radius:11px;padding:14px 16px;margin-bottom:10px;}
+.wf-amt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.wf-amt-name{font-weight:600;font-size:15px;}
+.wf-amt-result{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.wf-amt-komm{font-style:italic;color:#6B6358;font-size:13px;}
+.wf-note{font-size:13px;color:#6B6358;background:rgba(45,106,79,.05);border:1px solid rgba(45,106,79,.20);border-radius:10px;padding:11px 14px;margin-bottom:16px;}
+.wf-doc{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #EFECE6;}
+.wf-doc:last-child{border-bottom:none;}
+.wf-doc-name{font-size:14px;font-weight:500;}
+.wf-doc-tag{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-left:8px;}
+.wf-doc-actions{display:inline-flex;align-items:center;gap:6px;}
+.wf-doc-link{font-size:12px;font-weight:600;color:#3B5BA5;text-decoration:none;border:1px solid rgba(59,91,165,.3);border-radius:5px;padding:2px 8px;white-space:nowrap;transition:all .15s;}
+.wf-doc-link:hover{background:rgba(59,91,165,.1);}
+.wf-doc-demo{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#6B6358;background:#F0EEE9;padding:2px 7px;border-radius:5px;}
+
+/* Genehmigungsbescheid */
+.wf-besc-overlay{position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:60;overflow-y:auto;padding:24px 16px 60px;display:flex;flex-direction:column;align-items:center;}
+.wf-besc-bar{display:flex;gap:10px;margin-bottom:16px;}
+.wf-besc{background:#fff;width:100%;max-width:720px;border-radius:6px;padding:46px 50px;color:#1A1814;box-shadow:0 12px 40px rgba(0,0,0,.25);font-size:13.5px;line-height:1.6;font-family:'Inter',sans-serif;}
+.wf-bh{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1A1814;padding-bottom:14px;margin-bottom:20px;}
+.wf-bamt{font-weight:700;font-size:15px;}.wf-bamt-sub{font-size:13px;color:#55524C;}
+.wf-bwap{font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:.18em;font-size:13px;color:#C8490A;border:1.5px solid #C8490A;padding:6px 10px;border-radius:3px;}
+.wf-btitle{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:25px;margin-bottom:4px;}
+.wf-bsub{color:#55524C;margin-bottom:16px;}
+.wf-bmeta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:#55524C;border-top:1px solid #E7E3DB;border-bottom:1px solid #E7E3DB;padding:8px 0;margin-bottom:16px;}
+.wf-bpara{margin-bottom:16px;}
+.wf-btable{width:100%;border-collapse:collapse;margin-bottom:6px;}
+.wf-btable td{padding:6px 0;border-bottom:1px solid #EFECE6;vertical-align:top;}
+.wf-btable .wf-bk{color:#55524C;width:42%;padding-right:14px;}.wf-btable .wf-bv{font-weight:500;}
+.wf-bsec{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#C8490A;margin:20px 0 8px;}
+.wf-blist{margin:0 0 16px 18px;}.wf-blist li{margin-bottom:5px;}
+.wf-bsign{margin-top:28px;padding-top:14px;border-top:1px solid #E7E3DB;}
+.wf-bsign-name{font-weight:600;border-top:1px solid #1A1814;display:inline-block;padding-top:5px;margin-top:24px;}
+.wf-bfoot{margin-top:24px;font-size:11px;color:#8A847A;border-top:1px dashed #E7E3DB;padding-top:12px;}
+
+@media print{
+  body *{visibility:hidden;}
+  #wf-bescheid, #wf-bescheid *{visibility:visible;}
+  .wf-besc-overlay{position:static;background:#fff;padding:0;}
+  .wf-besc{box-shadow:none;max-width:none;padding:0;}
+  .wf-besc-bar{display:none;}
+}
+</style>
+
+<script id="wf-script">
+(function(){
+  var VERFUEGBARE_BEHOERDEN = ["Feuerwehr","Polizei","Gartenbauamt","Tiefbauamt"];
+  var wf = { rolle:"veranstalter", antrag:null, aktiveEingabe:null, nachbesserungEingabe:false, zeigeBescheid:false, justSubmitted:false, nachgebessert:false };
+  window.wf = wf;
+
+  function gfx(id){ var el=document.getElementById(id); return el?el.value.trim():""; }
+  function chk(id){ var el=document.getElementById(id); return !!(el&&el.checked); }
+
+  function ortTypLabel(v){ return {strasse:"Stra\u00dfenfl\u00e4che",gehweg:"Gehwegfl\u00e4che",fussgaenger:"Fu\u00dfg\u00e4ngerzone"}[v]||v||"\u2014"; }
+  function jaNein(v){ return v==="ja"?"Ja":v==="nein"?"Nein":(v||"\u2014"); }
+  function zeit(o){ if(!o)return"\u2014"; return [o.datum,o.uhrzeit].filter(Boolean).join(" \u00b7 ")||"\u2014"; }
+  function pill(s){ var m={"Eingegangen":"wf-pill-neutral","In Bearbeitung":"wf-pill-blue","R\u00fcckfrage":"wf-pill-warm","Genehmigt":"wf-pill-green","Abgelehnt":"wf-pill-warm","Ausstehend":"wf-pill-neutral","Freigegeben":"wf-pill-green"};
+    return '<span class="wf-pill '+(m[s]||"wf-pill-neutral")+'"><span class="wf-pill-dot"></span>'+s+'</span>'; }
+  function row(k,v){ return '<div class="wf-row"><span class="wf-k">'+k+'</span><span class="wf-v">'+(v||"\u2014")+'</span></div>'; }
+  function grp(t){ return '<div class="wf-group">'+t+'</div>'; }
+  function rfLabel(s){ return {beim_afoeo:"wartet auf Weiterleitung durch das Af\u00f6O",beim_veranstalter:"beim Veranstalter (Nachbesserung)",nachbesserung_beim_afoeo:"Nachbesserung liegt beim Af\u00f6O"}[s]||""; }
+
+  // Antrag aus den echten index.html-Feldern erzeugen (nach generatePDFs)
+  var AUFB={garn:"Garnituren",verk:"Verkaufsst\u00e4nde",zelt:"Zelte / Pavillons",buehne:"B\u00fchne",kar:"Karussell",huepf:"H\u00fcpfburg",spiel:"Spielstra\u00dfe",tier:"Tiere"};
+  async function wf_antragAnlegenFromIndex(){
+    var aufbauten=["garn","verk","zelt","buehne","kar","huepf","spiel","tier"].filter(function(k){return chk("fa_"+k);}).map(function(k){return AUFB[k];});
+    wf.antrag={
+      id:"2025-0847",
+      veranstaltungsname:gfx("f_veranstaltungsname"), institution:gfx("f_institution"), anschrift:gfx("f_anschrift"),
+      ansprech:{name:gfx("f_ansprech_name"),tel:gfx("f_ansprech_tel"),mobil:gfx("f_ansprech_mobil"),email:gfx("f_ansprech_email")},
+      aufbau:{datum:gfx("f_aufbau_datum"),uhrzeit:gfx("f_aufbau_uhrzeit")},
+      veranstaltung:{datum:gfx("f_veranstaltung_datum"),uhrzeit:gfx("f_veranstaltung_uhrzeit")},
+      abbau:{datum:gfx("f_abbau_datum"),uhrzeit:gfx("f_abbau_uhrzeit")},
+      musik_uhrzeit:gfx("f_musik_uhrzeit"), ausschank_ende:gfx("f_ausschank_ende"),
+      besucher_gleich:gfx("f_besucher_gleich"), besucher_gesamt:gfx("f_besucher_gesamt"),
+      ort_typ:gfx("f_ort_typ"), ort_beschreibung:gfx("f_ort_beschreibung"), stadt:gfx("f_stadt")||"Stuttgart",
+      aufbauten:aufbauten,
+      fluessiggas:gfx("f_fluessiggas")==="ja"?"ja":"nein",
+      gemeinnuetzig:chk("f_gemeinnuetzig")?"ja":"nein",
+      dokumente:[
+        {name:"Veranstaltungsmappe_Stuttgart.pdf",quelle:"wizard",blobKey:"checkliste"},
+        {name:"Antrag_Verkehrsflaeche.pdf",quelle:"wizard",blobKey:"antrag"},
+        {name:"Veranstaltererklaerung.pdf",quelle:"wizard",blobKey:"erklaerung"},
+        {name:"Lageplan.pdf",quelle:"upload"},
+        {name:"Sicherheitskonzept.pdf",quelle:"upload"},
+        {name:"Versicherungsnachweis.pdf",quelle:"upload"}
+      ],
+      status:"Eingegangen", weitergeleitet:false, behoerden:[]
+    };
+    wf.justSubmitted=true;
+    wf_render();                 // sofort rendern (schnelle UI)
+    // Budget-PDF-Blob asynchron erzeugen; danach erscheint der ansehen/herunterladen-Link
+    try{ await wf_budgetAnhaengen(); }catch(e){ console.error("wf-budget:",e); }
+    wf_render();
+  }
+
+  // Liest den Budget-Zustand aus index (bdgState/bdgCalc) und hängt ihn an den Antrag.
+  // Erzeugt zusätzlich das echte Budget-PDF als Blob (pdfBlobs.budget) → ansehen/herunterladen.
+  async function wf_budgetAnhaengen(){
+    if(typeof bdgState==="undefined" || !bdgState) return;      // Budget nie geöffnet
+    if(typeof bdgCalc!=="function") return;
+    var c=bdgCalc();
+    // nur anhängen, wenn überhaupt Beträge eingetragen wurden
+    if(!(c.aus>0 || c.einG>0)) return;
+    wf.antrag.budget={ aus:c.aus, einG:c.einG, einB:c.einB, saldoG:c.saldoG, saldoB:c.saldoB };
+    // echtes Budget-PDF erzeugen (ohne Download) und als Blob ablegen
+    var blobKey=null;
+    try{
+      if(typeof bdgExportPDF==="function"){
+        var blob=await bdgExportPDF(true); // true = kein Download, nur Blob zurückgeben
+        if(blob && typeof pdfBlobs!=="undefined" && pdfBlobs){ pdfBlobs.budget=blob; blobKey="budget"; }
+      }
+    }catch(e){ console.error("wf-budget-pdf:",e); }
+    if(!wf.antrag.dokumente.some(function(d){return d.name==="Budgetplan_Stuttgart.pdf";})){
+      wf.antrag.dokumente.push({name:"Budgetplan_Stuttgart.pdf",quelle:"budget",blobKey:blobKey});
+    }
+  }
+
+  function wf_sendeBereit(){ wf.sendeBereit=true; wf_render(); }
+  window.wf_antragSenden=function(){ wf.sendeBereit=false; wf_antragAnlegenFromIndex(); };
+
+  // Expliziter Schritt aus der Budget-Seite: Budget merken + zurück zum Antrag
+  window.wf_budgetUebernehmen=function(){
+    var ok=false;
+    try{
+      if(typeof bdgState!=="undefined" && bdgState && typeof bdgCalc==="function"){
+        var c=bdgCalc();
+        if(c.aus>0 || c.einG>0){ wf.budgetVorgemerkt=true; ok=true; }
+      }
+    }catch(e){ console.error("wf-budget:",e); }
+    // zurück zur Berater-/Ergebnisseite (index-Funktion)
+    if(typeof backFromBudget==="function") backFromBudget();
+    // Hinweis anzeigen: entweder "übernommen" oder "leer"
+    wf.budgetHinweis = ok ? "uebernommen" : "leer";
+    wf_render();
+    // sanft zum Status-/Sende-Bereich scrollen, falls vorhanden
+    var el=document.getElementById("wf-veranstalter-status");
+    if(el && ok) setTimeout(function(){ el.scrollIntoView({behavior:"smooth",block:"center"}); }, 250);
+  };
+
+  // Berater-PDFs (echte Blobs aus generatePDFs) ansehen / herunterladen.
+  // pdfBlobs ist bei index ein top-level 'let' (globales lexikalisches Binding) und hier direkt lesbar.
+  window.wf_docOeffnen=function(key){
+    try{
+      if(typeof pdfBlobs==="undefined"||!pdfBlobs||!pdfBlobs[key]) return;
+      var u=URL.createObjectURL(pdfBlobs[key]);
+      window.open(u,"_blank");
+      setTimeout(function(){URL.revokeObjectURL(u);},60000);
+    }catch(e){ console.error("wf-doc-oeffnen:",e); }
+  };
+  window.wf_docDownload=function(key,name){
+    try{
+      if(typeof pdfBlobs==="undefined"||!pdfBlobs||!pdfBlobs[key]) return;
+      var u=URL.createObjectURL(pdfBlobs[key]);
+      var a=document.createElement("a"); a.href=u; a.download=name||(key+".pdf");
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(u);},1000);
+    }catch(e){ console.error("wf-doc-download:",e); }
+  };
+
+  function readout(){
+    var a=wf.antrag, ans=a.ansprech||{};
+    var h='<div class="wf-card"><div class="wf-card-label">Antrag #'+a.id+' \u00b7 \u00a7 29 StVO</div>';
+    h+='<div class="wf-row"><span class="wf-k">Gesamtstatus</span><span class="wf-v">'+pill(a.status)+'</span></div>';
+    h+=grp("Veranstaltung")+row("Name",a.veranstaltungsname)+row("Art der Verkehrsfl\u00e4che",ortTypLabel(a.ort_typ))+row("Ort",a.ort_beschreibung)+row("Stadt",a.stadt);
+    h+=grp("Veranstalter")+row("Institution / Verein",a.institution)+row("Anschrift",a.anschrift)+row("Ansprechperson",ans.name)+row("Telefon",ans.tel)+row("Mobil",ans.mobil)+row("E-Mail",ans.email);
+    h+=grp("Zeiten")+row("Aufbau",zeit(a.aufbau))+row("Veranstaltung",zeit(a.veranstaltung))+row("Abbau",zeit(a.abbau));
+    if(a.musik_uhrzeit)h+=row("Musik bis",a.musik_uhrzeit);
+    if(a.ausschank_ende)h+=row("Ausschank-Ende",a.ausschank_ende);
+    h+=grp("Besucher")+row("Gleichzeitig",a.besucher_gleich)+row("Gesamt",a.besucher_gesamt);
+    h+=grp("Aufbauten & Sicherheit")+row("Aufbauten",(a.aufbauten&&a.aufbauten.length)?a.aufbauten.join(", "):"keine")+row("Fl\u00fcssiggas",jaNein(a.fluessiggas))+row("Gemeinn\u00fctzig",jaNein(a.gemeinnuetzig));
+    if(a.dokumente&&a.dokumente.length){ h+=grp("Dokumente");
+      a.dokumente.forEach(function(d){
+        var tag;
+        if(d.quelle==="wizard") tag='<span class="wf-doc-tag" style="background:rgba(59,91,165,.12);color:#3B5BA5">Berater</span>';
+        else if(d.quelle==="budget") tag='<span class="wf-doc-tag" style="background:rgba(200,73,10,.12);color:#C8490A">Budget</span>';
+        else tag='<span class="wf-doc-tag" style="background:#F0EEE9;color:#6B6358">Upload</span>';
+        var neu=d.aktualisiert?'<span class="wf-doc-tag" style="background:rgba(45,106,79,.14);color:#2D6A4F">aktualisiert</span>':'';
+        var aktionen='';
+        if(d.blobKey && typeof pdfBlobs!=="undefined" && pdfBlobs && pdfBlobs[d.blobKey]){
+          aktionen='<a href="#" class="wf-doc-link" onclick="wf_docOeffnen(\''+d.blobKey+'\');return false;">ansehen \u2197</a>'
+                 +'<a href="#" class="wf-doc-link" onclick="wf_docDownload(\''+d.blobKey+'\',\''+d.name+'\');return false;">herunterladen</a>';
+        } else {
+          aktionen='<span class="wf-doc-demo">Demo</span>';
+        }
+        h+='<div class="wf-doc"><span class="wf-doc-name">\ud83d\udcc4 '+d.name+'</span><span class="wf-doc-actions">'+aktionen+neu+tag+'</span></div>';
+      });
+    }
+    if(a.budget){
+      var eur=function(n){return (n||0).toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})+" \u20ac";};
+      h+=grp("Budget- & Finanzierungsplan");
+      h+=row("Ausgaben",eur(a.budget.aus));
+      h+=row("Einnahmen (geplant)",eur(a.budget.einG));
+      h+=row("davon best\u00e4tigt",eur(a.budget.einB));
+      var saldoFarbe=a.budget.saldoG>=0?"#2D6A4F":"#A33A2B";
+      h+='<div class="wf-row"><span class="wf-k">Saldo (geplant)</span><span class="wf-v" style="color:'+saldoFarbe+'">'+eur(a.budget.saldoG)+'</span></div>';
+    }
+    h+=grp("Beh\u00f6rden");
+    if(a.behoerden&&a.behoerden.length){
+      a.behoerden.forEach(function(b){
+        h+='<div class="wf-row"><span class="wf-k">'+b.name+'</span><span class="wf-v">'+pill(b.status)+'</span></div>';
+        if(b.kommentar)h+='<div class="wf-row" style="padding-top:0"><span class="wf-k" style="font-style:italic">\u21b3 \u201e'+b.kommentar+'\u201c</span><span class="wf-v"></span></div>';
+      });
+    } else { h+='<div class="wf-row"><span class="wf-k">Weiterleitung an Fach\u00e4mter</span><span class="wf-v" style="color:#6B6358;font-weight:500">noch nicht erfolgt</span></div>'; }
+    return h+'</div>';
+  }
+
+  function gesamtstatus(){ var bs=wf.antrag.behoerden; wf.antrag.status = bs.some(function(b){return b.rfStufe;})?"R\u00fcckfrage":"In Bearbeitung"; }
+
+  // ----- AföO -----
+  window.wf_weiterleiten=function(){
+    var g=[]; document.querySelectorAll(".wf-fb:checked").forEach(function(c){g.push(c.value);});
+    if(!g.length)return;
+    wf.antrag.behoerden=g.map(function(n){return {name:n,status:"Ausstehend",kommentar:""};});
+    wf.antrag.weitergeleitet=true; wf.antrag.status="In Bearbeitung"; wf_render();
+  };
+  window.wf_afoeoRfWeiter=function(n){ var b=find(n); if(b){b.rfStufe="beim_veranstalter"; wf_render();} };
+  window.wf_afoeoNbZurueck=function(n){ var b=find(n); if(b){b.rfStufe=null;b.status="Ausstehend";b.kommentar="";gesamtstatus();wf_render();} };
+  window.wf_afoeoGenehmigen=function(){ wf.antrag.status="Genehmigt"; wf_render(); };
+  window.wf_afoeoAblehnen=function(){ wf.antrag.status="Abgelehnt"; wf_render(); };
+  function freigabeStand(){ var bs=wf.antrag.behoerden; return {alleFrei:bs.length>0&&bs.every(function(b){return b.status==="Freigegeben";}),abgelehnt:bs.some(function(b){return b.status==="Abgelehnt";}),offen:bs.some(function(b){return b.status==="Ausstehend"||b.rfStufe;})}; }
+
+  // ----- Fachamt -----
+  function find(n){ return wf.antrag.behoerden.find(function(x){return x.name===n;}); }
+  window.wf_fachamtAktion=function(n,typ){ var b=find(n); if(!b)return;
+    if(typ==="Freigegeben"){b.status="Freigegeben";b.kommentar="";gesamtstatus();wf_render();return;}
+    wf.aktiveEingabe={name:n,typ:typ}; wf_render(); };
+  window.wf_fachamtSenden=function(n){ var ta=document.getElementById("wf-eingabe"); var t=ta?ta.value.trim():""; var b=find(n);
+    if(!b||!wf.aktiveEingabe)return; b.status=wf.aktiveEingabe.typ; b.kommentar=t;
+    if(wf.aktiveEingabe.typ==="R\u00fcckfrage")b.rfStufe="beim_afoeo"; wf.aktiveEingabe=null; gesamtstatus(); wf_render(); };
+  window.wf_fachamtAbbrechen=function(){ wf.aktiveEingabe=null; wf_render(); };
+  window.wf_fachamtReset=function(n){ var b=find(n); if(!b)return; b.status="Ausstehend";b.kommentar="";b.rfStufe=null;b.nachbesserungNotiz="";b.letzteRueckfrage="";wf.aktiveEingabe=null;gesamtstatus();wf_render(); };
+
+  // ----- Veranstalter Nachbesserung -----
+  window.wf_nbOeffnen=function(){ wf.nachbesserungEingabe=true; wf_render(); };
+  window.wf_nbAbbrechen=function(){ wf.nachbesserungEingabe=false; wf_render(); };
+  window.wf_nachbessern=function(){
+    var ta=document.getElementById("wf-nb-text"); var notiz=ta?ta.value.trim():"";
+    wf.antrag.behoerden.forEach(function(b){ if(b.rfStufe==="beim_veranstalter"){ b.letzteRueckfrage=b.kommentar; b.nachbesserungNotiz=notiz||"Unterlagen aktualisiert."; b.rfStufe="nachbesserung_beim_afoeo"; }});
+    var lp=wf.antrag.dokumente.find(function(d){return d.name==="Lageplan.pdf";}); if(lp)lp.aktualisiert=true;
+    gesamtstatus(); wf.nachbesserungEingabe=false; wf.nachgebessert=true; wf_render();
+  };
+
+  // ----- Bescheid -----
+  window.wf_bescheidOeffnen=function(){ wf.zeigeBescheid=true; wf_render(); };
+  window.wf_bescheidSchliessen=function(){ wf.zeigeBescheid=false; wf_render(); };
+  window.wf_bescheidDrucken=function(){ window.print(); };
+  function bescheidHtml(){
+    var a=wf.antrag; if(!a)return""; var ans=a.ansprech||{};
+    var auf=(a.aufbauten&&a.aufbauten.length)?a.aufbauten.join(", "):"\u2014";
+    var heute=new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"long",year:"numeric"});
+    function r(k,v){return '<tr><td class="wf-bk">'+k+'</td><td class="wf-bv">'+(v||"\u2014")+'</td></tr>';}
+    return '<div class="wf-besc-overlay"><div class="wf-besc-bar"><button class="wf-btn wf-btn-green" onclick="wf_bescheidDrucken()">Drucken / als PDF speichern</button><button class="wf-btn wf-btn-ghost" onclick="wf_bescheidSchliessen()">Schlie\u00dfen</button></div>'+
+      '<div class="wf-besc"><div class="wf-bh"><div><div class="wf-bamt">Landeshauptstadt Stuttgart</div><div class="wf-bamt-sub">Amt f\u00fcr \u00f6ffentliche Ordnung</div></div><div class="wf-bwap">STUTTGART</div></div>'+
+      '<div class="wf-btitle">Genehmigungsbescheid</div><div class="wf-bsub">\u00dcberlassung \u00f6ffentlicher Verkehrsfl\u00e4che nach \u00a7 29 Abs. 2 StVO</div>'+
+      '<div class="wf-bmeta"><span>Aktenzeichen: Af\u00f6O-'+a.id+'</span><span>Ausgestellt am: '+heute+', Stuttgart</span></div>'+
+      '<p class="wf-bpara">Auf Ihren Antrag hin wird die nachstehend bezeichnete Veranstaltung auf \u00f6ffentlicher Verkehrsfl\u00e4che nach \u00a7 29 Abs. 2 StVO <strong>genehmigt</strong>. Die Genehmigung ergeht vorbehaltlich der Abnahme vor Ort sowie der nachstehenden Auflagen.</p>'+
+      '<table class="wf-btable">'+r("Veranstaltung",a.veranstaltungsname)+r("Veranstalter",a.institution)+r("Ansprechperson",ans.name)+r("Ort",a.ort_beschreibung)+r("Art der Verkehrsfl\u00e4che",ortTypLabel(a.ort_typ))+r("Aufbau",zeit(a.aufbau))+r("Veranstaltung",zeit(a.veranstaltung))+r("Abbau",zeit(a.abbau))+r("Besucher (gleichzeitig)",a.besucher_gleich)+r("Aufbauten",auf)+r("Fl\u00fcssiggas",jaNein(a.fluessiggas))+'</table>'+
+      '<div class="wf-bsec">Beteiligte Fach\u00e4mter</div><table class="wf-btable">'+a.behoerden.map(function(b){return r(b.name,"Freigegeben");}).join("")+'</table>'+
+      '<div class="wf-bsec">Auflagen (Auszug)</div><ul class="wf-blist"><li>Die finale <strong>Abnahme erfolgt vor Ort am Veranstaltungstag</strong> durch die beteiligten Stellen.</li><li>Den Anordnungen der Polizei und Feuerwehr ist Folge zu leisten.</li><li>Flucht- und Rettungswege sind jederzeit freizuhalten.</li><li>Dieser Bescheid ist w\u00e4hrend der Veranstaltung mitzuf\u00fchren.</li></ul>'+
+      '<div class="wf-bsign"><div>Im Auftrag</div><div class="wf-bsign-name">Amt f\u00fcr \u00f6ffentliche Ordnung \u00b7 Landeshauptstadt Stuttgart</div></div>'+
+      '<div class="wf-bfoot">Digital \u00fcber das Veranstaltungsportal Stuttgart erstellt. (Demo-Dokument)</div></div></div>';
+  }
+
+  // ----- Views -----
+  function viewAfoeo(){
+    var h='<div class="wf-accent" style="background:#C8490A"></div><div class="wf-eyebrow" style="color:#C8490A">Ansicht \u00b7 Amt f\u00fcr \u00f6ffentliche Ordnung</div><h1 class="wf-h1">Zentrales Dashboard</h1><p class="wf-sub">Alle Antr\u00e4ge laufen zentral hier zusammen. Das Amt pr\u00fcft, leitet an die Fach\u00e4mter weiter und entscheidet.</p>';
+    if(!wf.antrag) return h+'<div class="wf-empty"><strong>Keine Antr\u00e4ge im Dashboard.</strong>Sobald ein Veranstalter einen Antrag stellt, erscheint er hier.</div>';
+    h+=readout();
+    if(!wf.antrag.weitergeleitet){
+      var vor=["Feuerwehr","Polizei","Gartenbauamt"];
+      var checks=VERFUEGBARE_BEHOERDEN.map(function(b){return '<label class="wf-check"><input type="checkbox" class="wf-fb" value="'+b+'" '+(vor.indexOf(b)>=0?"checked":"")+'> '+b+'</label>';}).join("");
+      h+='<div class="wf-card"><div class="wf-card-label">An Fach\u00e4mter weiterleiten</div><p style="font-size:13px;color:#6B6358;margin-bottom:14px">Welche \u00c4mter beteiligt werden, h\u00e4ngt von Art, Gr\u00f6\u00dfe, Ort und Gef\u00e4hrdungslage ab. Der Veranstalter hat keinen direkten Kontakt zu den \u00c4mtern \u2014 alles l\u00e4uft \u00fcber das Amt f\u00fcr \u00f6ffentliche Ordnung.</p>'+checks+'<div class="wf-btnrow"><button class="wf-btn wf-btn-warm" onclick="wf_weiterleiten()">Weiterleiten</button></div></div>';
+    } else {
+      h+='<div class="wf-toast">\u2713 Weitergeleitet an: '+wf.antrag.behoerden.map(function(b){return b.name;}).join(", ")+'. Status der Fach\u00e4mter siehe oben.</div>';
+      var offen=wf.antrag.behoerden.filter(function(b){return b.rfStufe==="beim_afoeo"||b.rfStufe==="nachbesserung_beim_afoeo";});
+      if(offen.length){
+        var tasks=offen.map(function(b){
+          if(b.rfStufe==="beim_afoeo") return '<div class="wf-amt"><div class="wf-amt-head"><span class="wf-amt-name">R\u00fcckfrage von '+b.name+'</span></div><div class="wf-row"><span class="wf-k">Anliegen</span><span class="wf-v" style="font-style:italic;font-weight:500;color:#6B6358">\u201e'+b.kommentar+'\u201c</span></div><p style="font-size:12px;color:#6B6358;margin:6px 0 8px">Liegt beim Af\u00f6O. Von hier wird sie an den Veranstalter weitergegeben.</p><div class="wf-btnrow"><button class="wf-btn wf-btn-warm wf-btn-sm" onclick="wf_afoeoRfWeiter(\''+b.name+'\')">An Veranstalter weiterleiten</button></div></div>';
+          return '<div class="wf-amt"><div class="wf-amt-head"><span class="wf-amt-name">Nachbesserung f\u00fcr '+b.name+'</span></div><div class="wf-row"><span class="wf-k">Antwort des Veranstalters</span><span class="wf-v" style="font-style:italic;font-weight:500;color:#6B6358">\u201e'+(b.nachbesserungNotiz||"")+'\u201c</span></div><p style="font-size:12px;color:#6B6358;margin:6px 0 8px">Liegt beim Af\u00f6O. Von hier geht sie an das Fachamt zur\u00fcck.</p><div class="wf-btnrow"><button class="wf-btn wf-btn-green wf-btn-sm" onclick="wf_afoeoNbZurueck(\''+b.name+'\')">An '+b.name+' zur\u00fcckgeben</button></div></div>';
+        }).join("");
+        h+='<div class="wf-card" style="border-color:rgba(200,73,10,.30)"><div class="wf-card-label" style="color:#C8490A">Aufgaben \u2014 Vermittlung</div><p style="font-size:13px;color:#6B6358;margin-bottom:12px">Jede R\u00fcckfrage und Nachbesserung l\u00e4uft \u00fcber das Amt f\u00fcr \u00f6ffentliche Ordnung. Nichts geht direkt zwischen Fachamt und Veranstalter.</p>'+tasks+'</div>';
+      }
+      if(wf.antrag.status==="Genehmigt"){ h+='<div class="wf-toast">\u2713 Genehmigt. Der Veranstalter ist informiert. Die finale Abnahme erfolgt vor Ort am Veranstaltungstag.</div>'; }
+      else if(wf.antrag.status==="Abgelehnt"){ h+='<div class="wf-toast" style="background:rgba(163,58,43,.08);border-color:rgba(163,58,43,.3);color:#A33A2B">Antrag abgelehnt. Der Veranstalter ist informiert.</div>'; }
+      else { var f=freigabeStand(),p="";
+        if(f.alleFrei)p='<p style="font-size:13px;color:#6B6358;margin-bottom:12px">Alle beteiligten Fach\u00e4mter haben freigegeben.</p><div class="wf-btnrow"><button class="wf-btn wf-btn-green" onclick="wf_afoeoGenehmigen()">Genehmigen</button></div>';
+        else if(f.abgelehnt)p='<p style="font-size:13px;color:#6B6358;margin-bottom:12px">Mindestens ein Fachamt hat abgelehnt.</p><div class="wf-btnrow"><button class="wf-btn wf-btn-danger" onclick="wf_afoeoAblehnen()">Antrag ablehnen</button></div>';
+        else p='<p style="font-size:13px;color:#6B6358">Die Endentscheidung ist m\u00f6glich, sobald alle Fach\u00e4mter geantwortet haben.</p>';
+        h+='<div class="wf-card"><div class="wf-card-label">Endentscheidung</div>'+p+'</div>';
+      }
+    }
+    return h;
+  }
+
+  function viewFachamt(){
+    var h='<div class="wf-accent" style="background:#2D6A4F"></div><div class="wf-eyebrow" style="color:#2D6A4F">Ansicht \u00b7 Fachamt</div><h1 class="wf-h1">Freigabe</h1><p class="wf-sub">Fach\u00e4mter erhalten den Antrag \u00fcber das Amt f\u00fcr \u00f6ffentliche Ordnung und geben frei, stellen eine R\u00fcckfrage oder lehnen ab.</p>';
+    if(!(wf.antrag&&wf.antrag.weitergeleitet)) return h+'<div class="wf-empty"><strong>Nichts zur Freigabe.</strong>Antr\u00e4ge erscheinen hier, sobald das Amt f\u00fcr \u00f6ffentliche Ordnung sie weiterleitet.</div>';
+    h+='<div class="wf-note">Jedes Fachamt erh\u00e4lt einen <strong>eigenen Link per E-Mail</strong> und sieht nur den f\u00fcr seine Freigabe n\u00f6tigen Teil \u2014 ohne Login, ohne neue Software. Die gesamte Kommunikation l\u00e4uft <strong>zentral \u00fcber das Amt f\u00fcr \u00f6ffentliche Ordnung</strong>; die \u00c4mter haben untereinander und mit dem Veranstalter keinen direkten Kontakt. (Hier im Demo als eine Ansicht.)</div>'+readout();
+    var zr=wf.antrag.behoerden.filter(function(b){return b.status==="Ausstehend"&&b.letzteRueckfrage;});
+    if(zr.length){ h+='<div class="wf-card" style="border-color:rgba(45,106,79,.30)"><div class="wf-card-label" style="color:#2D6A4F">Nachgebessert \u2014 erneute Pr\u00fcfung</div><p style="font-size:13px;color:#6B6358;margin-bottom:8px">Das Fachamt erh\u00e4lt eine <strong>Erinnerung per E-Mail</strong> \u2014 \u00fcber <strong>denselben Link</strong> wie zuvor (kein neuer Link) \u2014 und sieht jetzt die aktualisierten Unterlagen.</p>'+zr.map(function(b){return '<div class="wf-row"><span class="wf-k">'+b.name+' \u2014 Antwort des Veranstalters</span><span class="wf-v" style="font-style:italic;font-weight:500;color:#6B6358">\u201e'+(b.nachbesserungNotiz||"")+'\u201c</span></div>';}).join("")+'</div>'; }
+    var cards=wf.antrag.behoerden.map(function(b){
+      var inSchleife=!!b.rfStufe, entschieden=b.status!=="Ausstehend"&&!b.rfStufe, inEingabe=wf.aktiveEingabe&&wf.aktiveEingabe.name===b.name, akt;
+      if(inSchleife){ akt='<div class="wf-amt-result">'+pill("R\u00fcckfrage")+'<span class="wf-amt-komm">'+rfLabel(b.rfStufe)+'</span></div>'; }
+      else if(entschieden){ akt='<div class="wf-amt-result">'+pill(b.status)+(b.kommentar?'<span class="wf-amt-komm">\u201e'+b.kommentar+'\u201c</span>':'')+'<button class="wf-btn wf-btn-ghost wf-btn-sm" onclick="wf_fachamtReset(\''+b.name+'\')">\u00e4ndern</button></div>'; }
+      else if(inEingabe){ var rf=wf.aktiveEingabe.typ==="R\u00fcckfrage"; var lab=rf?"R\u00fcckfrage an den Veranstalter (\u00fcber das Af\u00f6O):":"Begr\u00fcndung der Ablehnung:"; var vs=rf?"Bitte Pavillons ma\u00dfstabsgerecht im Lageplan einzeichnen.":"";
+        akt='<div class="wf-field" style="margin-bottom:10px"><label for="wf-eingabe">'+lab+'</label><textarea id="wf-eingabe">'+vs+'</textarea></div><div class="wf-btnrow"><button class="wf-btn '+(rf?"wf-btn-warm":"wf-btn-danger")+' wf-btn-sm" onclick="wf_fachamtSenden(\''+b.name+'\')">'+(rf?"R\u00fcckfrage senden":"Ablehnung senden")+'</button><button class="wf-btn wf-btn-ghost wf-btn-sm" onclick="wf_fachamtAbbrechen()">Abbrechen</button></div>'; }
+      else { var hint=b.letzteRueckfrage?'<p style="font-size:12px;color:#6B6358;margin-bottom:8px">Nachgebessert (vorherige R\u00fcckfrage: \u201e'+b.letzteRueckfrage+'\u201c). Bitte erneut pr\u00fcfen.</p>':'';
+        akt=hint+'<div class="wf-btnrow"><button class="wf-btn wf-btn-green wf-btn-sm" onclick="wf_fachamtAktion(\''+b.name+'\',\'Freigegeben\')">Freigeben</button><button class="wf-btn wf-btn-ghost wf-btn-sm" onclick="wf_fachamtAktion(\''+b.name+'\',\'R\u00fcckfrage\')">R\u00fcckfrage</button><button class="wf-btn wf-btn-danger wf-btn-sm" onclick="wf_fachamtAktion(\''+b.name+'\',\'Abgelehnt\')">Ablehnen</button></div>'; }
+      return '<div class="wf-amt"><div class="wf-amt-head"><span class="wf-amt-name">'+b.name+'</span></div>'+akt+'</div>';
+    }).join("");
+    h+='<div class="wf-card"><div class="wf-card-label">Ihre Entscheidung je Fachamt</div>'+cards+'</div>';
+    return h;
+  }
+
+  function viewVeranstalterStatus(){
+    // Budget-Hinweis (einmalig nach 'Budget übernehmen')
+    var budgetHinweis="";
+    if(wf.budgetHinweis==="uebernommen"){
+      budgetHinweis='<div class="wf-toast">\u2713 Budget \u00fcbernommen. Es wird beim Absenden automatisch an Ihren Antrag angeh\u00e4ngt (als Dokument + Zusammenfassung f\u00fcr das Amt).</div>';
+    } else if(wf.budgetHinweis==="leer"){
+      budgetHinweis='<div class="wf-note" style="border-color:rgba(107,99,88,.25);background:#F0EEE9">Es wurden noch keine Budget-Werte eingetragen. Sie k\u00f6nnen den Antrag auch ohne Budget senden.</div>';
+    }
+
+    if(!wf.antrag && wf.sendeBereit){
+      return '<div style="max-width:none;font-family:Inter,sans-serif">'+budgetHinweis+'<div class="wf-card" style="border-color:rgba(200,73,10,.35);background:rgba(200,73,10,.04)"><div class="wf-card-label" style="color:#C8490A">Antrag ans Amt senden</div><p style="font-size:14px;margin-bottom:6px">Ihre Formulare sind erstellt. Bisher m\u00fcssten Sie diese ausdrucken, unterschreiben und per Post/E-Mail ans Amt schicken.</p><p style="font-size:13px;color:#6B6358;margin-bottom:12px">Mit dem Portal geht der Antrag <strong>direkt digital</strong> an das Amt f\u00fcr \u00f6ffentliche Ordnung \u2014 kein Ausdrucken, kein Postweg (kein Medienbruch).</p><div class="wf-btnrow"><button class="wf-btn wf-btn-warm" onclick="wf_antragSenden()">Antrag ans Amt f\u00fcr \u00f6ffentliche Ordnung senden</button></div></div></div>';
+    }
+    if(!wf.antrag){
+      return budgetHinweis ? '<div style="max-width:none;font-family:Inter,sans-serif">'+budgetHinweis+'</div>' : "";
+    }
+    var h='<div style="max-width:none;font-family:Inter,sans-serif">'+budgetHinweis;
+    if(wf.justSubmitted) h+='<div class="wf-toast">\u2713 Antrag liegt jetzt beim Amt f\u00fcr \u00f6ffentliche Ordnung. <a href="#" onclick="wf_setRolle(\'afoeo\');return false;" style="color:#2D6A4F;font-weight:600">Zum Af\u00f6O-Dashboard \u2192</a></div>';
+    else if(wf.nachgebessert) h+='<div class="wf-toast">\u2713 Nachbesserung abgesendet. Sie liegt jetzt beim Amt f\u00fcr \u00f6ffentliche Ordnung.</div>';
+    if(wf.antrag.status==="Genehmigt"){
+      h+='<div class="wf-card" style="border-color:rgba(45,106,79,.35);background:rgba(45,106,79,.04)"><div class="wf-card-label" style="color:#2D6A4F">\u2713 Genehmigt</div><p style="font-size:14px;margin-bottom:6px">Ihr Antrag wurde genehmigt.</p><p style="font-size:13px;color:#6B6358;margin-bottom:12px">Die finale <strong>Abnahme erfolgt vor Ort am Veranstaltungstag</strong> (gemeinsamer Rundgang).</p><div class="wf-btnrow"><button class="wf-btn wf-btn-green" onclick="wf_bescheidOeffnen()">Genehmigungsbescheid ansehen</button></div></div>';
+    } else if(wf.antrag.status==="Abgelehnt"){
+      h+='<div class="wf-card" style="border-color:rgba(163,58,43,.30);background:rgba(163,58,43,.04)"><div class="wf-card-label" style="color:#A33A2B">Antrag abgelehnt</div><p style="font-size:13px;color:#6B6358">Details erhalten Sie \u00fcber das Amt f\u00fcr \u00f6ffentliche Ordnung.</p></div>';
+    }
+    var rf=wf.antrag.behoerden.filter(function(b){return b.rfStufe==="beim_veranstalter";});
+    if(rf.length){
+      var list=rf.map(function(b){return '<div class="wf-row"><span class="wf-k">'+b.name+' <span style="color:#6B6358">(\u00fcber das Af\u00f6O)</span></span><span class="wf-v" style="font-style:italic;font-weight:500;color:#6B6358">\u201e'+b.kommentar+'\u201c</span></div>';}).join("");
+      var ein=wf.nachbesserungEingabe
+        ? '<div class="wf-field" style="margin:12px 0 10px"><label for="wf-nb-text">Was haben Sie angepasst? (geht \u00fcber das Af\u00f6O zur\u00fcck an das Amt)</label><textarea id="wf-nb-text">Lageplan korrigiert: Pavillons jetzt ma\u00dfstabsgerecht eingezeichnet.</textarea></div><div class="wf-note" style="margin:0 0 10px">\ud83d\udcce Aktualisiertes Dokument wird beigef\u00fcgt: <strong>Lageplan.pdf</strong> (neue Version)</div><div class="wf-btnrow"><button class="wf-btn wf-btn-warm" onclick="wf_nachbessern()">Nachbesserung absenden</button><button class="wf-btn wf-btn-ghost" onclick="wf_nbAbbrechen()">Abbrechen</button></div>'
+        : '<div class="wf-btnrow"><button class="wf-btn wf-btn-warm" onclick="wf_nbOeffnen()">Unterlagen nachbessern &amp; erneut einreichen</button></div>';
+      h+='<div class="wf-card" style="border-color:rgba(200,73,10,.35)"><div class="wf-card-label" style="color:#C8490A">R\u00fcckfrage \u2014 bitte nachbessern</div><p style="font-size:13px;color:#6B6358;margin-bottom:10px">\u00dcber das Amt f\u00fcr \u00f6ffentliche Ordnung ist eine R\u00fcckfrage eingegangen. Bitte die Unterlagen anpassen und erneut einreichen.</p>'+list+ein+'</div>';
+    }
+    h+=readout();
+    return h+'</div>';
+  }
+
+  function phaseText(){
+    var a=wf.antrag; if(!a)return "Demo \u00b7 \u00a729 StVO";
+    if(a.status==="Genehmigt")return "Abgeschlossen \u00b7 Genehmigt";
+    if(a.status==="Abgelehnt")return "Abgeschlossen \u00b7 Abgelehnt";
+    if(a.behoerden.some(function(b){return b.rfStufe;}))return "R\u00fcckfrage l\u00e4uft (\u00fcber das Af\u00f6O)";
+    if(!a.weitergeleitet)return "Beim Af\u00f6O \u00b7 Pr\u00fcfung";
+    return "In Bearbeitung \u00b7 Fach\u00e4mter";
+  }
+
+  window.wf_setRolle=function(r){
+    wf.rolle=r;
+    ["veranstalter","afoeo","fachamt"].forEach(function(x){ var t=document.getElementById("wf-tab-"+x); if(t)t.className="wf-tab"+(x===r?" wf-active":""); });
+    wf_render();
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+
+  window.wf_reset=function(){
+    wf.antrag=null; wf.rolle="veranstalter"; wf.aktiveEingabe=null; wf.nachbesserungEingabe=false; wf.zeigeBescheid=false; wf.justSubmitted=false; wf.nachgebessert=false; wf.budgetHinweis=null; wf.budgetVorgemerkt=false;
+    ["veranstalter","afoeo","fachamt"].forEach(function(x){ var t=document.getElementById("wf-tab-"+x); if(t)t.className="wf-tab"+(x==="veranstalter"?" wf-active":""); });
+    wf_render();
+  };
+
+  function wf_render(){
+    var af=document.querySelector("#wf-afoeo .wf-overlay-inner"); if(af)af.innerHTML=viewAfoeo();
+    var fa=document.querySelector("#wf-fachamt .wf-overlay-inner"); if(fa)fa.innerHTML=viewFachamt();
+    var vs=document.getElementById("wf-veranstalter-status"); if(vs)vs.innerHTML=viewVeranstalterStatus();
+    document.getElementById("wf-afoeo").className="wf-overlay"+(wf.rolle==="afoeo"?" wf-show":"");
+    document.getElementById("wf-fachamt").className="wf-overlay"+(wf.rolle==="fachamt"?" wf-show":"");
+    var bc=document.getElementById("wf-bescheid"); if(bc)bc.innerHTML=wf.zeigeBescheid?bescheidHtml():"";
+    var ph=document.getElementById("wf-phase"); if(ph)ph.textContent=phaseText();
+    wf.justSubmitted=false; wf.nachgebessert=false; wf.budgetHinweis=null;
+  }
+  window.wf_render=wf_render;
+
+  // ----- index.html-Funktionen nicht-destruktiv erweitern -----
+  if(typeof window.generatePDFs==="function"){
+    var _gen=window.generatePDFs;
+    window.generatePDFs=async function(){ try{ return await _gen.apply(this,arguments); } finally { try{ wf_sendeBereit(); }catch(e){ console.error("wf:",e); } } };
+  }
+  if(typeof window.restart==="function"){
+    var _res=window.restart;
+    window.restart=function(){ var rr=_res.apply(this,arguments); try{ wf_reset(); }catch(e){} return rr; };
+  }
+
+  wf_render();
+})();
 </script>
 </body>
 </html>
